@@ -3,6 +3,7 @@ import ApplicationServices
 import Carbon.HIToolbox
 import CoreGraphics
 import ServiceManagement
+import ScreenCaptureKit
 
 @MainActor
 final class PermissionManager: ObservableObject {
@@ -26,8 +27,15 @@ final class PermissionManager: ObservableObject {
     }
 
     func requestScreenCapture() {
-        CGRequestScreenCaptureAccess()
-        scheduleRefresh()
+        if #available(macOS 15.0, *) {
+            Task {
+                _ = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+                refresh()
+            }
+        } else {
+            CGRequestScreenCaptureAccess()
+            scheduleRefresh()
+        }
     }
 
     func requestAccessibility() {

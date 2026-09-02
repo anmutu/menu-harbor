@@ -20,6 +20,7 @@ final class AppModel: ObservableObject {
     let permissions: PermissionManager
     private let launchAtLogin: LaunchAtLoginController
     private var autoHideTask: Task<Void, Never>?
+    private var cancellables = Set<AnyCancellable>()
 
     init(
         store: PreferencesStore,
@@ -35,10 +36,23 @@ final class AppModel: ObservableObject {
         self.interactor = interactor
         self.permissions = permissions
         self.launchAtLogin = launchAtLogin
-        self.preferences = store.load()
+        let loadedPreferences = store.load()
+        self.preferences = loadedPreferences
+        if loadedPreferences.hasCompletedOnboarding {
+            menuBar.fold()
+        } else {
+            menuBar.expand()
+        }
         self.foldState = menuBar.state
         self.capability = permissions.capability
-        menuBar.updateIcon(style: preferences.iconStyle)
+        menuBar.updateIcon(style: loadedPreferences.iconStyle)
+
+        permissions.$hasScreenCapturePermission
+            .combineLatest(permissions.$hasAccessibilityPermission)
+            .map { HarborCapability.resolve(screenCapture: $0, accessibility: $1) }
+            .removeDuplicates()
+            .sink { [weak self] capability in self?.capability = capability }
+            .store(in: &cancellables)
     }
 
     var filteredItems: [MenuBarItemDescriptor] {
