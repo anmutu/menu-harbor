@@ -91,3 +91,14 @@ enum ItemSearch {
         }
     }
 }
+
+enum ItemActivationPlan: Equatable {
+    case click
+    case expandForManualClick
+    case refresh
+
+    static func make(itemExists: Bool, accessibility: Bool) -> Self {
+        guard itemExists else { return .refresh }
+        return accessibility ? .click : .expandForManualClick
+    }
+}

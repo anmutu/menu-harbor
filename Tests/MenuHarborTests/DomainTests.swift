@@ -74,4 +74,25 @@ final class DomainTests: XCTestCase {
         XCTAssertEqual(ItemSearch.filter([descriptor], query: "   "), [descriptor])
         XCTAssertTrue(ItemSearch.filter([descriptor], query: "calendar").isEmpty)
     }
+
+    func testSelectingItemWithoutAccessibilityRequestsNativeExpansion() {
+        XCTAssertEqual(
+            ItemActivationPlan.make(itemExists: true, accessibility: false),
+            .expandForManualClick
+        )
+    }
+
+    func testSelectingItemWithAccessibilityClicksOriginalItem() {
+        XCTAssertEqual(
+            ItemActivationPlan.make(itemExists: true, accessibility: true),
+            .click
+        )
+    }
+
+    func testMissingItemRequestsRefresh() {
+        XCTAssertEqual(
+            ItemActivationPlan.make(itemExists: false, accessibility: true),
+            .refresh
+        )
+    }
 }
