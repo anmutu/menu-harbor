@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 
 enum HarborCapability: Equatable {
     case foldOnly
@@ -45,3 +46,48 @@ enum FoldState: Equatable {
     }
 }
 
+struct MenuBarItemDescriptor: Equatable, Identifiable {
+    let windowID: UInt32
+    let ownerPID: Int32
+    let ownerName: String
+    let name: String
+    let frame: CGRect
+    let isOnScreen: Bool
+
+    var id: UInt32 { windowID }
+}
+
+enum ItemPartitioner {
+    static func hiddenItems(
+        in items: [MenuBarItemDescriptor],
+        dividerWindowID: UInt32
+    ) -> [MenuBarItemDescriptor] {
+        guard let divider = items.first(where: { $0.windowID == dividerWindowID }) else {
+            return []
+        }
+
+        return items
+            .filter { $0.windowID != dividerWindowID && $0.frame.maxX <= divider.frame.minX }
+            .sorted { lhs, rhs in
+                if lhs.frame.minX == rhs.frame.minX {
+                    return lhs.windowID < rhs.windowID
+                }
+                return lhs.frame.minX > rhs.frame.minX
+            }
+    }
+}
+
+enum ItemSearch {
+    static func filter(
+        _ items: [MenuBarItemDescriptor],
+        query: String
+    ) -> [MenuBarItemDescriptor] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !needle.isEmpty else { return items }
+
+        return items.filter {
+            $0.name.localizedCaseInsensitiveContains(needle)
+                || $0.ownerName.localizedCaseInsensitiveContains(needle)
+        }
+    }
+}
