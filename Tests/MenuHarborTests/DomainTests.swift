@@ -95,4 +95,26 @@ final class DomainTests: XCTestCase {
             .refresh
         )
     }
+
+    func testShelfPresentationFiltersAndExplainsFoldOnlyMode() {
+        let fixtures = [item("Secure Tunnel", id: 1, x: 100, owner: "Acme VPN")]
+
+        XCTAssertEqual(ShelfPresentation.filtered(items: fixtures, query: "vpn"), fixtures)
+        XCTAssertEqual(
+            ShelfPresentation.permissionMessage(for: .foldOnly),
+            "开启增强模式，直接在港湾中识别和点击图标"
+        )
+        XCTAssertNil(ShelfPresentation.permissionMessage(for: .browsable))
+    }
+
+    func testAutoHideDisabledReturnsNoDeadline() {
+        XCTAssertNil(AutoHidePolicy.deadline(now: Date(timeIntervalSince1970: 100), delay: 0))
+    }
+
+    func testInteractionRenewsDeadline() {
+        XCTAssertEqual(
+            AutoHidePolicy.deadline(now: Date(timeIntervalSince1970: 100), delay: 10),
+            Date(timeIntervalSince1970: 110)
+        )
+    }
 }

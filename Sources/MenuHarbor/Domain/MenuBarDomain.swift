@@ -102,3 +102,22 @@ enum ItemActivationPlan: Equatable {
         return accessibility ? .click : .expandForManualClick
     }
 }
+
+enum ShelfPresentation {
+    static func filtered(
+        items: [MenuBarItemDescriptor],
+        query: String
+    ) -> [MenuBarItemDescriptor] {
+        ItemSearch.filter(items, query: query)
+    }
+
+    static func permissionMessage(for capability: HarborCapability) -> String? {
+        capability == .foldOnly ? "开启增强模式，直接在港湾中识别和点击图标" : nil
+    }
+}
+
+enum AutoHidePolicy {
+    static func deadline(now: Date, delay: TimeInterval) -> Date? {
+        delay > 0 ? now.addingTimeInterval(delay) : nil
+    }
+}
