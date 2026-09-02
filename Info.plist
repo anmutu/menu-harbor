@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>zh_CN</string>
+    <key>CFBundleDisplayName</key>
+    <string>MenuHarbor</string>
+    <key>CFBundleExecutable</key>
+    <string>MenuHarbor</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.deardu.menuharbor</string>
+    <key>CFBundleName</key>
+    <string>MenuHarbor</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSScreenCaptureUsageDescription</key>
+    <string>MenuHarbor 仅截取菜单栏图标，用于在刘海下方的港湾中显示；图像只在本机内存中处理，不会保存或上传。</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 MenuHarbor</string>
+</dict>
+</plist>
+
