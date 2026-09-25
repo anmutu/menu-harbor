@@ -44,6 +44,8 @@ struct OnboardingView: View {
         }
         .frame(width: 540, height: 410)
         .background(.background)
+        .onAppear { model.startPermissionPolling() }
+        .onDisappear { model.stopPermissionPolling() }
     }
 
     private var welcome: some View {
@@ -51,7 +53,7 @@ struct OnboardingView: View {
             icon: "rectangle.bottomhalf.inset.filled",
             eyebrow: "先把空间还给你",
             title: "图标被刘海挡住？\n把它们停进港湾。",
-            message: "MenuHarbor 把菜单栏里暂时用不到的图标收起来，需要时从刘海下方展开。基础折叠不需要任何权限。"
+            message: "MenuHarbor 会把当前屏幕的菜单栏图标集中到刘海下方的港湾；原生菜单栏保持稳定，需要时搜索或点击。基础收纳不需要任何权限。"
         )
     }
 
@@ -75,9 +77,11 @@ struct OnboardingView: View {
             .padding(.top, 22)
 
             VStack(spacing: 9) {
-                Text("只需要整理一次")
+                Text(model.isNotchAwareScreen ? "刘海屏自动整理" : "只需要整理一次")
                     .font(.system(size: 23, weight: .semibold))
-                Text("展开菜单栏，按住 ⌘ 将不常用的图标拖到双箭头左侧。\n它们之后会自动进入你的港湾。")
+                Text(model.isNotchAwareScreen
+                    ? "在这台 Mac 上，MenuHarbor 会自动收集当前屏幕的菜单栏图标。你可以直接在刘海下方搜索，不需要手动拖拽。"
+                    : "展开菜单栏，按住 ⌘ 将不常用的图标拖到双箭头左侧。\n拖到最左侧竖线标记左边的图标会始终保持隐藏，只在港湾中出现。")
                     .multilineTextAlignment(.center)
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)

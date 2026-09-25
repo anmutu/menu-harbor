@@ -35,7 +35,7 @@ final class MenuBarScanner: MenuBarScanning {
 
     private static func makeDescriptor(_ info: [CFString: Any]) -> MenuBarItemDescriptor? {
         guard
-            let windowID = (info[kCGWindowNumber] as? NSNumber)?.uint32Value,
+            let rawWindowID = info[kCGWindowNumber] as? NSNumber,
             let ownerPID = (info[kCGWindowOwnerPID] as? NSNumber)?.int32Value,
             let ownerName = info[kCGWindowOwnerName] as? String,
             let bounds = info[kCGWindowBounds] as? NSDictionary,
@@ -43,6 +43,10 @@ final class MenuBarScanner: MenuBarScanning {
             let layer = (info[kCGWindowLayer] as? NSNumber)?.int32Value,
             layer == CGWindowLevelForKey(.statusWindow)
         else {
+            return nil
+        }
+
+        guard rawWindowID.int64Value > 0, let windowID = UInt32(exactly: rawWindowID.int64Value) else {
             return nil
         }
 

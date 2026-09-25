@@ -82,12 +82,16 @@ final class LaunchAtLoginController {
 
 @MainActor
 final class GlobalShortcut {
-    private static var callback: (() -> Void)?
+    private let action: () -> Void
     private var hotKey: EventHotKeyRef?
     private var eventHandler: EventHandlerRef?
+    private var keyCode: UInt32
+    private var modifiers: UInt32
 
-    init(action: @escaping () -> Void) {
-        Self.callback = action
+    init(keyCode: UInt32, modifiers: UInt32, action: @escaping () -> Void) {
+        self.action = action
+        self.keyCode = keyCode
+        self.modifiers = modifiers
         installHandler()
     }
 
@@ -104,30 +108,50 @@ final class GlobalShortcut {
         enabled ? register() : unregister()
     }
 
+    /// 用户录制了新组合时更新注册；仅在当前已注册（即开关打开）时重挂。
+    func updateCombination(keyCode: UInt32, modifiers: UInt32) {
+        self.keyCode = keyCode
+        self.modifiers = modifiers
+        guard hotKey != nil else { return }
+        unregister()
+        register()
+    }
+
     private func installHandler() {
         var specification = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
         )
+        let context = Unmanaged.passUnretained(self).toOpaque()
         InstallEventHandler(
             GetApplicationEventTarget(),
-            { _, _, _ in
-                Task { @MainActor in GlobalShortcut.callback?() }
+            { _, _, userData in
+                guard let userData else { return noErr }
+                let shortcut = Unmanaged<GlobalShortcut>.fromOpaque(userData).takeUnretainedValue()
+                // Carbon 回调线程不受我们控制，必须安全 hop 到 MainActor，
+                // 不能用 assumeIsolated（非主线程时直接 trap）。
+                Task { @MainActor in
+                    shortcut.fire()
+                }
                 return noErr
             },
             1,
             &specification,
-            nil,
+            context,
             &eventHandler
         )
+    }
+
+    private func fire() {
+        action()
     }
 
     private func register() {
         guard hotKey == nil else { return }
         let identifier = EventHotKeyID(signature: OSType(0x4D_48_42_52), id: 1)
         RegisterEventHotKey(
-            UInt32(kVK_ANSI_H),
-            UInt32(controlKey | optionKey),
+            keyCode,
+            modifiers,
             identifier,
             GetApplicationEventTarget(),
             0,

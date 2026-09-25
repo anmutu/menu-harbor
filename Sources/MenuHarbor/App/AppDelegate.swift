@@ -6,6 +6,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
     private var model: AppModel?
     private var shelfPanel: ShelfPanel?
+    private var hoverController: HoverShelfController?
+    private var scrollController: MenuBarScrollController?
     private var settingsWindow: NSWindow?
     private var onboardingWindow: NSWindow?
     private var shortcut: GlobalShortcut?
@@ -24,23 +26,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             launchAtLogin: LaunchAtLoginController()
         )
         let shelf = ShelfPanel(model: model)
+        let hover = HoverShelfController(model: model, menuBar: controller, shelf: shelf)
+        let scroll = MenuBarScrollController(model: model)
 
-        controller.onPrimaryAction = { [weak self, weak model, weak shelf, weak controller] in
-            guard let self, let model, let shelf, let controller else { return }
+        let openShelf = { [weak self, weak shelf, weak controller] in
+            guard let self, let shelf, let controller else { return }
             shelf.toggle(relativeTo: controller.mainButton)
-            if shelf.isVisible { model.refreshShelf() }
             self.dismissOnboardingIfNeeded()
         }
+        controller.onPrimaryAction = openShelf
+        model.onPrimaryShortcut = openShelf
         controller.onOpenSettings = { [weak self] in self?.showSettings() }
+        controller.onRestoreAll = { [weak model] in model?.restore() }
         controller.onQuit = { NSApp.terminate(nil) }
 
-        let shortcut = GlobalShortcut { [weak model] in model?.toggleFold() }
+        let shortcut = GlobalShortcut(
+            keyCode: UInt32(model.preferences.shortcutKeyCode),
+            modifiers: UInt32(model.preferences.shortcutModifiers)
+        ) { [weak model] in model?.performPrimaryShortcut() }
         shortcut.setEnabled(model.preferences.shortcutEnabled)
         model.onShortcutPreferenceChanged = { [weak shortcut] enabled in shortcut?.setEnabled(enabled) }
+        model.onShortcutCombinationChanged = { [weak shortcut] code, modifiers in
+            shortcut?.updateCombination(keyCode: UInt32(code), modifiers: UInt32(modifiers))
+        }
+
+        hover.setEnabled(model.preferences.hoverOpensShelf)
+        model.onHoverPreferenceChanged = { [weak hover] enabled in hover?.setEnabled(enabled) }
+
+        scroll.setEnabled(model.preferences.scrollTogglesMenuBar)
+        model.onScrollPreferenceChanged = { [weak scroll] enabled in scroll?.setEnabled(enabled) }
 
         menuBarController = controller
         self.model = model
         shelfPanel = shelf
+        hoverController = hover
+        scrollController = scroll
         self.shortcut = shortcut
 
         if !model.preferences.hasCompletedOnboarding {
@@ -68,6 +88,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         window.title = "MenuHarbor 设置"
         window.isReleasedWhenClosed = false
+        // 应用是 accessory 且常驻所有 Space，设置窗口必须跟随，
+        // 否则用户在全屏应用所在 Space 里打不开设置。
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.contentViewController = NSHostingController(rootView: SettingsView(model: model, openOnboarding: { [weak self] in self?.showOnboarding() }))
         window.center()
         window.makeKeyAndOrderFront(nil)
@@ -91,6 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         window.title = "MenuHarbor"
         window.isReleasedWhenClosed = false
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.contentViewController = NSHostingController(rootView: OnboardingView(model: model, finish: { [weak self] in self?.closeOnboarding() }))
         window.center()
         window.makeKeyAndOrderFront(nil)

@@ -68,31 +68,100 @@ struct SettingsView: View {
         }
         .frame(width: 620, height: 440)
         .background(.background)
+        .onAppear { model.startPermissionPolling() }
+        .onDisappear { model.stopPermissionPolling() }
     }
 
     private var generalSection: some View {
         VStack(alignment: .leading, spacing: 18) {
             sectionHeading("菜单栏行为", subtitle: "MenuHarbor 只在需要时出现，不改变系统菜单栏外观。")
 
-            SettingsCard {
-                SettingsRow(title: "自动收起", subtitle: "展开后无操作多久恢复隐藏图标") {
-                    Picker("自动收起", selection: Binding(
-                        get: { model.preferences.autoHideDelay },
-                        set: { model.setAutoHideDelay($0) }
-                    )) {
-                        Text("关闭").tag(TimeInterval(0))
-                        Text("5 秒").tag(TimeInterval(5))
-                        Text("10 秒").tag(TimeInterval(10))
-                        Text("30 秒").tag(TimeInterval(30))
+            if model.foldIsReliable == false {
+                SettingsCard {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("折叠在本机不可用，已转入收纳模式")
+                                .font(.system(size: 12, weight: .medium))
+                            Text("当前系统（macOS 26+）会回收被折叠的图标，同类产品均受影响。MenuHarbor 已自动保持菜单栏展开，港湾仍可浏览和点击图标；恢复按钮可在整理时显示全部。")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 12)
+                        Button("立即恢复") { model.restore() }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                     }
-                    .labelsHidden()
-                    .frame(width: 90)
+                    .padding(.vertical, 11)
+                }
+            }
+
+            if model.isNotchAwareScreen {
+                SettingsCard {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "rectangle.topthird.inset.filled")
+                            .foregroundStyle(.teal)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("刘海安全模式已自动开启")
+                                .font(.system(size: 12, weight: .medium))
+                            Text("MenuHarbor 会把当前屏幕的菜单栏图标集中到刘海下方，首次使用不需要逐个拖到分隔线。")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .padding(.vertical, 11)
+                }
+            }
+
+            SettingsCard {
+                if !model.isCollectOnlyMode {
+                    SettingsRow(title: "自动收起", subtitle: "展开后无操作多久恢复隐藏图标") {
+                        Picker("自动收起", selection: Binding(
+                            get: { model.preferences.autoHideDelay },
+                            set: { model.setAutoHideDelay($0) }
+                        )) {
+                            Text("关闭").tag(TimeInterval(0))
+                            Text("5 秒").tag(TimeInterval(5))
+                            Text("10 秒").tag(TimeInterval(10))
+                            Text("30 秒").tag(TimeInterval(30))
+                        }
+                        .labelsHidden()
+                        .frame(width: 90)
+                    }
+                    Divider()
+                }
+                SettingsRow(title: "快捷键", subtitle: model.isCollectOnlyMode ? "随时打开刘海下方港湾，点击左侧录制新组合" : "随时切换隐藏区和完整菜单栏，点击左侧录制新组合") {
+                    HStack(spacing: 10) {
+                        ShortcutRecorderButton(
+                            display: model.preferences.shortcutDisplay
+                        ) { keyCode, modifiers, display in
+                            model.setShortcut(keyCode: keyCode, modifiers: modifiers, display: display)
+                        }
+                        Toggle("快捷键", isOn: Binding(
+                            get: { model.preferences.shortcutEnabled },
+                            set: { model.setShortcutEnabled($0) }
+                        ))
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                    }
                 }
                 Divider()
-                SettingsRow(title: "快捷键", subtitle: "随时切换隐藏区和完整菜单栏") {
-                    Toggle("⌃⌥H", isOn: Binding(
-                        get: { model.preferences.shortcutEnabled },
-                        set: { model.setShortcutEnabled($0) }
+                SettingsRow(title: "悬停展开", subtitle: "鼠标在主按钮或刘海下方热区停留时自动打开港湾") {
+                    Toggle("悬停展开", isOn: Binding(
+                        get: { model.preferences.hoverOpensShelf },
+                        set: { model.setHoverOpensShelf($0) }
+                    ))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                }
+                Divider()
+                SettingsRow(title: "滚动切换", subtitle: "在菜单栏上滚动滚轮即可收起或展开") {
+                    Toggle("滚动切换", isOn: Binding(
+                        get: { model.preferences.scrollTogglesMenuBar },
+                        set: { model.setScrollTogglesMenuBar($0) }
                     ))
                     .toggleStyle(.switch)
                     .labelsHidden()
@@ -126,7 +195,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("恢复全部图标")
                             .font(.system(size: 12, weight: .medium))
-                        Text("暂时关闭折叠，方便重新整理菜单栏。")
+                        Text("进入整理模式，隐藏区和始终隐藏区的图标全部显示，方便重新布置。")
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
@@ -142,7 +211,7 @@ struct SettingsView: View {
     private var privacySection: some View {
         @ObservedObject var permissions = model.permissions
         return VStack(alignment: .leading, spacing: 18) {
-            sectionHeading("按需授权", subtitle: "基础折叠不需要权限。增强能力全部在本机完成。")
+            sectionHeading("按需授权", subtitle: model.isNotchAwareScreen ? "刘海下方的基础收纳不需要权限；增强能力全部在本机完成。" : "基础折叠不需要权限。增强能力全部在本机完成。")
             SettingsCard {
                 PermissionRow(
                     icon: "rectangle.dashed.and.paperclip",
@@ -248,4 +317,3 @@ private struct PermissionRow: View {
         .padding(.vertical, 13)
     }
 }
-

@@ -35,5 +35,24 @@ final class PreferencesStoreTests: XCTestCase {
 
         XCTAssertEqual(store.load(), .defaults)
     }
+
+    func testLegacyPreferencesKeepExistingValuesWhenNewFieldsAreMissing() throws {
+        let legacyJSON = """
+        {"autoHideDelay":30,"shortcutEnabled":false,"iconStyle":"dot","launchAtLogin":true,"hasCompletedOnboarding":true}
+        """
+        defaults.set(Data(legacyJSON.utf8), forKey: PreferencesStore.storageKey)
+
+        let loaded = store.load()
+        XCTAssertEqual(loaded.autoHideDelay, 30)
+        XCTAssertFalse(loaded.shortcutEnabled)
+        XCTAssertEqual(loaded.iconStyle, .dot)
+        XCTAssertTrue(loaded.launchAtLogin)
+        XCTAssertFalse(loaded.hoverOpensShelf)
+        XCTAssertEqual(loaded.shortcutKeyCode, HarborPreferences.defaultShortcutKeyCode)
+        XCTAssertEqual(loaded.shortcutModifiers, HarborPreferences.defaultShortcutModifiers)
+        XCTAssertEqual(loaded.shortcutDisplay, "⌃⌥H")
+        XCTAssertNil(loaded.foldSupported)
+        XCTAssertTrue(loaded.hasCompletedOnboarding)
+    }
 }
 

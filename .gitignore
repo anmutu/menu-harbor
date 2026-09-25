@@ -4,3 +4,10 @@ DerivedData/
 *.xcodeproj/xcuserdata/
 .DS_Store
 .worktrees/
+scripts/icon.iconset/
+
+# 内部资料：竞品分析（含战略判断），不随仓库分发
+docs/research/private-*.md
+
+# 真机演示截图：包含真实屏幕内容（个人浏览记录等），禁止入库
+docs/screenshots/
