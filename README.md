@@ -47,6 +47,10 @@ macOS 没有公开 API 用来枚举、复制和点击所有第三方 `NSStatusIt
 
 这个项目是官网/Developer ID 分发取向的 MVP，不承诺 Mac App Store 审核通过。菜单栏相关系统行为可能随 macOS 升级变化，基础折叠和恢复逻辑会优先保持可用。
 
+## 使用指南
+
+- [使用指南（怎么用、权限说明、故障排查）](docs/usage-guide.md)
+
 ## 研究与设计
 
 - [竞品研究](docs/research/2026-09-02-macos-menu-bar-managers.md)
