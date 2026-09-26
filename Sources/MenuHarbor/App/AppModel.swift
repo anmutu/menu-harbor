@@ -400,6 +400,11 @@ final class AppModel: ObservableObject {
         onHoverPreferenceChanged?(enabled)
     }
 
+    /// 悬停控制器每次移动都直接读取偏好，这里只需持久化。
+    func setHoverZoneWide(_ enabled: Bool) {
+        updatePreferences { $0.hoverZoneWide = enabled }
+    }
+
     func setScrollTogglesMenuBar(_ enabled: Bool) {
         updatePreferences { $0.scrollTogglesMenuBar = enabled }
         onScrollPreferenceChanged?(enabled)

@@ -84,7 +84,30 @@ final class HoverShelfController {
         if let notchZone {
             region = region.union(notchZone)
         }
+        if model.preferences.hoverZoneWide,
+           let wideZone = menuBarRightZone(for: NSEvent.mouseLocation) {
+            region = region.union(wideZone)
+        }
         return region.insetBy(dx: -Self.hotZonePadding, dy: -Self.hotZonePadding)
+    }
+
+    /// 菜单栏右半侧（状态项所在区域）。悬停区域扩展开启时作为入口热区；
+    /// 左半侧是应用菜单，不能纳入，否则切换应用菜单时港湾会误弹出。
+    private func menuBarRightZone(for location: NSPoint) -> NSRect? {
+        guard
+            let screen = menuBar.mainButton?.window?.screen
+                ?? NSScreen.screens.first(where: { $0.frame.contains(location) })
+        else {
+            return nil
+        }
+        let menuBarHeight = screen.frame.maxY - screen.visibleFrame.maxY
+        guard menuBarHeight > 1 else { return nil }
+        return NSRect(
+            x: screen.frame.midX,
+            y: screen.frame.maxY - menuBarHeight,
+            width: screen.frame.width / 2,
+            height: menuBarHeight
+        )
     }
 
     /// 刘海正下方的窄热区。它只在系统提供左右安全区域时存在，

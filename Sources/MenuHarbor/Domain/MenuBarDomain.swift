@@ -34,6 +34,9 @@ struct HarborPreferences: Codable, Equatable {
     var iconStyle: IconStyle
     var launchAtLogin: Bool
     var hoverOpensShelf: Bool
+    /// 悬停展开的热区从主按钮/刘海扩展到菜单栏右半侧（iBar 式聚合入口），
+    /// 仅在 hoverOpensShelf 开启时生效。
+    var hoverZoneWide: Bool
     var scrollTogglesMenuBar: Bool
     /// 折叠在本机是否可靠；nil 表示尚未探测。macOS 26 探测失败后持久化，
     /// 之后启动和切换直接进入收纳模式，不再反复闪烁尝试折叠。
@@ -56,6 +59,7 @@ struct HarborPreferences: Codable, Equatable {
         iconStyle: .harbor,
         launchAtLogin: false,
         hoverOpensShelf: true,
+        hoverZoneWide: false,
         scrollTogglesMenuBar: false,
         foldSupported: nil,
         hasCompletedOnboarding: false
@@ -75,6 +79,7 @@ extension HarborPreferences {
             iconStyle: try container.decode(IconStyle.self, forKey: .iconStyle),
             launchAtLogin: try container.decode(Bool.self, forKey: .launchAtLogin),
             hoverOpensShelf: try container.decodeIfPresent(Bool.self, forKey: .hoverOpensShelf) ?? false,
+            hoverZoneWide: try container.decodeIfPresent(Bool.self, forKey: .hoverZoneWide) ?? false,
             scrollTogglesMenuBar: try container.decodeIfPresent(Bool.self, forKey: .scrollTogglesMenuBar) ?? false,
             foldSupported: try container.decodeIfPresent(Bool.self, forKey: .foldSupported),
             hasCompletedOnboarding: try container.decode(Bool.self, forKey: .hasCompletedOnboarding)

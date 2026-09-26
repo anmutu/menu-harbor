@@ -158,6 +158,16 @@ struct SettingsView: View {
                     .labelsHidden()
                 }
                 Divider()
+                SettingsRow(title: "悬停区域扩展", subtitle: "悬停菜单栏右半侧任意位置即可打开港湾（iBar 式入口）") {
+                    Toggle("悬停区域扩展", isOn: Binding(
+                        get: { model.preferences.hoverZoneWide },
+                        set: { model.setHoverZoneWide($0) }
+                    ))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .disabled(!model.preferences.hoverOpensShelf)
+                }
+                Divider()
                 SettingsRow(title: "滚动切换", subtitle: "在菜单栏上滚动滚轮即可收起或展开") {
                     Toggle("滚动切换", isOn: Binding(
                         get: { model.preferences.scrollTogglesMenuBar },
