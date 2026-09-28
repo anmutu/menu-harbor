@@ -127,7 +127,7 @@ struct ShelfView: View {
     }
 
     private var canFilterAtRisk: Bool {
-        model.isCollectOnlyMode && !filteredAtRiskItems.isEmpty
+        model.isCollectOnlyMode && (!filteredAtRiskItems.isEmpty || showAtRiskOnly)
     }
 
     private var filteredAtRiskItems: [MenuBarItemDescriptor] {
