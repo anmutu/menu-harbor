@@ -213,6 +213,15 @@ enum ItemActivationPlan: Equatable {
     }
 }
 
+enum ItemActivationPolicy {
+    /// 合成坐标点击只有在 WindowServer 明确认为目标可见时才安全。
+    /// 刘海遮挡或已离屏的窗口不能把点击投到一个用户看不见的坐标上，
+    /// 否则会把“没有发生任何操作”误报成成功。
+    static func canUseCoordinateClick(isOnScreen: Bool) -> Bool {
+        isOnScreen
+    }
+}
+
 enum ShelfPresentation {
     static func filtered(
         items: [MenuBarItemDescriptor],
@@ -240,7 +249,9 @@ enum ShelfPresentation {
             // some macOS releases; `rescueFrame` keeps only those windows that
             // overlap the known notch instead of re-introducing other Spaces.
             .filter { item in
-                guard screenFrame?.intersects(item.frame) ?? true else { return false }
+                guard let screenFrame else { return true }
+                guard Self.isMenuBarWindow(item, on: screenFrame) else { return false }
+                guard screenFrame.intersects(item.frame) else { return false }
                 return item.isOnScreen || rescueFrame?.intersects(item.frame) == true
             }
             .sorted { lhs, rhs in
@@ -249,6 +260,20 @@ enum ShelfPresentation {
                 }
                 return lhs.frame.minX > rhs.frame.minX
             }
+    }
+
+    /// CGWindowList 的 statusWindow 层还会包含控制面板或其他辅助窗口。
+    /// 菜单栏状态项位于屏幕顶部且高度接近菜单栏；先做几何限制，避免把
+    /// 254×254 的辅助窗口显示成一个“菜单栏图标”。
+    private static func isMenuBarWindow(_ item: MenuBarItemDescriptor, on screen: CGRect) -> Bool {
+        let bandHeight = min(64, max(32, screen.height * 0.08))
+        let menuBarBand = CGRect(
+            x: screen.minX,
+            y: screen.minY,
+            width: screen.width,
+            height: bandHeight
+        )
+        return menuBarBand.intersects(item.frame) && item.frame.height <= bandHeight
     }
 
     /// 收纳模式下的“不可达”标记。
@@ -302,6 +327,10 @@ enum AutoHidePolicy {
 /// 已被确认不可靠（Ice 等竞品同样受影响）。折叠后必须验证隐藏项真的
 /// 离开了屏幕，否则在界面中明确告知用户，而不是让图标无声地占着位置。
 enum FoldReliabilityPolicy {
+    /// WindowServer 可能在折叠后的短窗口里重建状态项窗口；一次缺失不能
+    /// 直接把本机永久标成“不支持折叠”。
+    static let healthProbeAttempts = 3
+
     /// 折叠是否真正生效：隐藏区每一项都不得与任何屏幕相交。
     static func isFoldEffective(
         items: [MenuBarItemDescriptor],

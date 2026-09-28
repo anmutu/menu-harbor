@@ -492,33 +492,41 @@ final class AppModel: ObservableObject {
         foldHealthTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             guard !Task.isCancelled else { return }
-            guard let self, self.foldState == .folded, self.menuBar.state.isFolded else { return }
-            guard
-                let dividerWindowID = self.menuBar.dividerWindowID,
-                let alwaysHiddenID = self.menuBar.alwaysHiddenDividerWindowID
-            else {
-                self.handleUnreliableFold()
-                return
-            }
-            let allItems = self.scanner.scan()
-            let partition = ItemPartitioner.partition(
-                in: allItems,
-                hiddenDividerWindowID: dividerWindowID,
-                alwaysHiddenDividerWindowID: alwaysHiddenID,
-                screenFrames: self.cgScreenFrames
-            )
-            let hidden = partition.hidden.filter { $0.ownerPID != ProcessInfo.processInfo.processIdentifier }
-            let effective = FoldReliabilityPolicy.isFoldEffective(
-                items: hidden,
-                screenFrames: self.cgScreenFrames
-            )
-            self.foldIsReliable = effective
-            if effective {
-                if self.preferences.foldSupported != true {
-                    self.updatePreferences { $0.foldSupported = true }
+            guard let self else { return }
+
+            for attempt in 0..<FoldReliabilityPolicy.healthProbeAttempts {
+                guard !Task.isCancelled, self.foldState == .folded, self.menuBar.state.isFolded else { return }
+
+                var effective = false
+                if let dividerWindowID = self.menuBar.dividerWindowID,
+                   let alwaysHiddenID = self.menuBar.alwaysHiddenDividerWindowID {
+                    let allItems = self.scanner.scan()
+                    let partition = ItemPartitioner.partition(
+                        in: allItems,
+                        hiddenDividerWindowID: dividerWindowID,
+                        alwaysHiddenDividerWindowID: alwaysHiddenID,
+                        screenFrames: self.cgScreenFrames
+                    )
+                    let hidden = partition.hidden.filter { $0.ownerPID != ProcessInfo.processInfo.processIdentifier }
+                    effective = FoldReliabilityPolicy.isFoldEffective(
+                        items: hidden,
+                        screenFrames: self.cgScreenFrames
+                    )
                 }
-            } else {
-                self.handleUnreliableFold()
+
+                if effective {
+                    self.foldIsReliable = true
+                    if self.preferences.foldSupported != true {
+                        self.updatePreferences { $0.foldSupported = true }
+                    }
+                    return
+                }
+
+                guard attempt + 1 < FoldReliabilityPolicy.healthProbeAttempts else {
+                    self.handleUnreliableFold()
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 400_000_000)
             }
         }
     }

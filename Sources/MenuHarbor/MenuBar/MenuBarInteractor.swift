@@ -52,6 +52,9 @@ final class MenuBarInteractor {
             if pressViaAccessibility(current) {
                 return .clicked
             }
+            guard ItemActivationPolicy.canUseCoordinateClick(isOnScreen: current.isOnScreen) else {
+                return .failed
+            }
             return postClick(to: current) ? .clicked : .failed
         }
     }

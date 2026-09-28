@@ -106,6 +106,34 @@ final class DomainTests: XCTestCase {
         XCTAssertEqual(collected.map(\.name), ["Under notch"])
     }
 
+    func testCollectModeItemsExcludesLargeStatusOverlaysOutsideMenuBarBand() {
+        let screen = CGRect(x: 0, y: 0, width: 1_440, height: 900)
+        let menuItem = MenuBarItemDescriptor(
+            windowID: 1,
+            ownerPID: 42,
+            ownerName: "Control Center",
+            name: "WiFi",
+            frame: CGRect(x: 1_200, y: 0, width: 38, height: 33),
+            isOnScreen: true
+        )
+        let overlay = MenuBarItemDescriptor(
+            windowID: 2,
+            ownerPID: 43,
+            ownerName: "LinkedNotesUIService",
+            name: "Window",
+            frame: CGRect(x: 1_000, y: 700, width: 254, height: 254),
+            isOnScreen: true
+        )
+
+        let collected = ShelfPresentation.collectModeItems(
+            in: [menuItem, overlay],
+            excludedWindowIDs: [],
+            screenFrame: screen
+        )
+
+        XCTAssertEqual(collected.map(\.name), ["WiFi"])
+    }
+
     func testCollectModeMarksItemsIntersectingNotchAsAtRisk() {
         let items = [
             item("Safe", id: 1, x: 900),
@@ -127,6 +155,10 @@ final class DomainTests: XCTestCase {
         XCTAssertTrue(FoldReliabilityPolicy.isFoldEffective(items: [], screenFrames: screens))
         XCTAssertTrue(FoldReliabilityPolicy.isFoldEffective(items: [offscreen], screenFrames: screens))
         XCTAssertFalse(FoldReliabilityPolicy.isFoldEffective(items: [offscreen, onscreen], screenFrames: screens))
+    }
+
+    func testFoldHealthUsesMultipleProbeAttemptsBeforeDegrading() {
+        XCTAssertEqual(FoldReliabilityPolicy.healthProbeAttempts, 3)
     }
 
     func testCapabilityDegradesWithoutPermissions() {
@@ -266,6 +298,11 @@ final class DomainTests: XCTestCase {
             ItemActivationPlan.make(itemExists: false, accessibility: true),
             .refresh
         )
+    }
+
+    func testCoordinateClickRequiresAnOnScreenTarget() {
+        XCTAssertTrue(ItemActivationPolicy.canUseCoordinateClick(isOnScreen: true))
+        XCTAssertFalse(ItemActivationPolicy.canUseCoordinateClick(isOnScreen: false))
     }
 
     func testShelfPresentationFiltersAndExplainsFoldOnlyMode() {
