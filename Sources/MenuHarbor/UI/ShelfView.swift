@@ -6,6 +6,9 @@ struct ShelfView: View {
     let dismiss: () -> Void
 
     @FocusState private var searchFocused: Bool
+    /// 收纳模式下的快速聚焦入口：刘海真正挡住的项目通常只占一小部分，
+    /// 先看它们比在整条菜单栏里找更快。这个筛选只在港湾打开期间生效。
+    @State private var showAtRiskOnly = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,9 +25,18 @@ struct ShelfView: View {
         }
         .onExitCommand(perform: dismiss)
         .onMoveCommand(perform: moveSelection)
-        .onChange(of: model.shelfFocusRequest) { focusSearch() }
+        .onChange(of: model.shelfFocusRequest) {
+            // ShelfPanel 复用同一个 hosting view；每次重新打开都从“全部”开始，
+            // 避免用户上次临时筛选状态悄悄影响下一次查找。
+            showAtRiskOnly = false
+            focusSearch()
+        }
+        .onChange(of: model.shelfSelectionIndex) { _, _ in clampShelfSelection() }
+        .onChange(of: model.query) { _, _ in clampShelfSelection() }
+        .onChange(of: model.atRiskItemIDs) { _, _ in clampShelfSelection() }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("MenuHarbor 图标港湾")
+        .onAppear { clampShelfSelection() }
     }
 
     private func focusSearch() {
@@ -55,6 +67,10 @@ struct ShelfView: View {
             }
 
             Spacer(minLength: 8)
+
+            if canFilterAtRisk {
+                riskFilterButton
+            }
 
             searchField
 
@@ -106,8 +122,55 @@ struct ShelfView: View {
             }
         }
         .padding(.horizontal, 9)
-        .frame(width: 170, height: 28)
+        .frame(width: canFilterAtRisk ? 136 : 170, height: 28)
         .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+    }
+
+    private var canFilterAtRisk: Bool {
+        model.isCollectOnlyMode && !model.atRiskItemIDs.isEmpty
+    }
+
+    private var filteredAtRiskItems: [MenuBarItemDescriptor] {
+        model.filteredItems.filter { model.atRiskItemIDs.contains($0.windowID) }
+    }
+
+    private var visibleItems: [MenuBarItemDescriptor] {
+        guard showAtRiskOnly, model.isCollectOnlyMode else { return model.filteredItems }
+        return filteredAtRiskItems
+    }
+
+    private var selectedItemID: UInt32? {
+        guard model.filteredItems.indices.contains(model.shelfSelectionIndex) else { return nil }
+        return model.filteredItems[model.shelfSelectionIndex].windowID
+    }
+
+    private var riskFilterButton: some View {
+        Button {
+            showAtRiskOnly.toggle()
+            clampShelfSelection()
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 9, weight: .bold))
+                Text("\(model.atRiskItemIDs.count)")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(showAtRiskOnly ? Color.white : Color.orange)
+            .frame(minWidth: 38, minHeight: 28)
+            .background(
+                showAtRiskOnly ? Color.orange : Color.orange.opacity(0.13),
+                in: RoundedRectangle(cornerRadius: 7, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .strokeBorder(Color.orange.opacity(showAtRiskOnly ? 0 : 0.35), lineWidth: 0.5)
+            }
+        }
+        .buttonStyle(.plain)
+        .help(showAtRiskOnly ? "显示全部菜单栏图标" : "只看可能被刘海挡住的图标")
+        .accessibilityLabel(showAtRiskOnly ? "显示全部菜单栏图标" : "只看可能被刘海挡住的图标")
+        .accessibilityValue("\(model.atRiskItemIDs.count) 个图标")
+        .accessibilityAddTraits(showAtRiskOnly ? .isSelected : [])
     }
 
     @ViewBuilder
@@ -121,15 +184,22 @@ struct ShelfView: View {
                 description: Text("换一个名称或应用名试试")
             )
             .frame(maxWidth: .infinity, minHeight: 132)
+        } else if visibleItems.isEmpty {
+            ContentUnavailableView(
+                "没有溢出图标",
+                systemImage: "checkmark.circle",
+                description: Text("当前搜索结果都没有被刘海挡住")
+            )
+            .frame(maxWidth: .infinity, minHeight: 132)
         } else {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal) {
                     HStack(spacing: 6) {
-                    ForEach(Array(model.filteredItems.enumerated()), id: \.element.id) { index, item in
+                    ForEach(visibleItems) { item in
                         ShelfItemButton(
                             item: item,
                             image: model.snapshots[item.windowID],
-                            selected: index == model.shelfSelectionIndex,
+                            selected: selectedItemID == item.windowID,
                             isAlwaysHidden: model.alwaysHiddenItemIDs.contains(item.windowID),
                             isAtRisk: model.atRiskItemIDs.contains(item.windowID)
                         ) {
@@ -145,6 +215,7 @@ struct ShelfView: View {
                 .frame(minHeight: 132)
                 .onChange(of: model.shelfSelectionIndex) { _, index in
                     guard model.filteredItems.indices.contains(index) else { return }
+                    guard visibleItems.contains(where: { $0.id == model.filteredItems[index].id }) else { return }
                     proxy.scrollTo(model.filteredItems[index].id, anchor: .center)
                 }
             }
@@ -226,6 +297,26 @@ struct ShelfView: View {
     }
 
     private func moveSelection(_ direction: MoveCommandDirection) {
+        if showAtRiskOnly, model.isCollectOnlyMode {
+            let items = visibleItems
+            guard !items.isEmpty else { return }
+            let currentIndex = selectedItemID.flatMap { selected in
+                items.firstIndex(where: { $0.windowID == selected })
+            } ?? (direction == .left ? items.count : -1)
+            let nextIndex: Int
+            switch direction {
+            case .left:
+                nextIndex = max(0, currentIndex - 1)
+            case .right:
+                nextIndex = min(items.count - 1, currentIndex + 1)
+            default:
+                return
+            }
+            guard let fullIndex = model.filteredItems.firstIndex(where: { $0.windowID == items[nextIndex].windowID }) else { return }
+            model.shelfSelectionIndex = fullIndex
+            return
+        }
+
         switch direction {
         case .left:
             model.moveShelfSelection(by: -1)
@@ -241,6 +332,40 @@ struct ShelfView: View {
         let item = model.filteredItems[model.shelfSelectionIndex]
         dismiss()
         Task { await model.activate(item) }
+    }
+
+    /// Panel 里的本地方向键监视器直接修改 model 的索引；筛选开启时，
+    /// 把它落到非溢出项目上会让视觉上没有选中项，因此在状态变化后就近回到
+    /// 第一个仍可见的溢出项目。
+    private func clampShelfSelection() {
+        guard !model.filteredItems.isEmpty else {
+            model.shelfSelectionIndex = 0
+            return
+        }
+
+        guard showAtRiskOnly, model.isCollectOnlyMode else {
+            model.shelfSelectionIndex = min(model.shelfSelectionIndex, model.filteredItems.count - 1)
+            return
+        }
+
+        if let selectedItemID,
+           model.atRiskItemIDs.contains(selectedItemID) {
+            return
+        }
+
+        let riskIndices = model.filteredItems.indices.filter { index in
+            model.atRiskItemIDs.contains(model.filteredItems[index].windowID)
+        }
+        guard !riskIndices.isEmpty else {
+            showAtRiskOnly = false
+            model.shelfSelectionIndex = min(model.shelfSelectionIndex, model.filteredItems.count - 1)
+            return
+        }
+
+        let currentIndex = min(max(model.shelfSelectionIndex, 0), model.filteredItems.count - 1)
+        model.shelfSelectionIndex = riskIndices.min {
+            abs($0 - currentIndex) < abs($1 - currentIndex)
+        } ?? riskIndices[0]
     }
 }
 
