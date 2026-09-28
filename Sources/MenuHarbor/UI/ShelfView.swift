@@ -127,7 +127,7 @@ struct ShelfView: View {
     }
 
     private var canFilterAtRisk: Bool {
-        model.isCollectOnlyMode && !model.atRiskItemIDs.isEmpty
+        model.isCollectOnlyMode && !filteredAtRiskItems.isEmpty
     }
 
     private var filteredAtRiskItems: [MenuBarItemDescriptor] {
@@ -152,7 +152,7 @@ struct ShelfView: View {
             HStack(spacing: 4) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 9, weight: .bold))
-                Text("\(model.atRiskItemIDs.count)")
+                Text("\(filteredAtRiskItems.count)")
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
             }
             .foregroundStyle(showAtRiskOnly ? Color.white : Color.orange)
@@ -169,7 +169,7 @@ struct ShelfView: View {
         .buttonStyle(.plain)
         .help(showAtRiskOnly ? "显示全部菜单栏图标" : "只看可能被刘海挡住的图标")
         .accessibilityLabel(showAtRiskOnly ? "显示全部菜单栏图标" : "只看可能被刘海挡住的图标")
-        .accessibilityValue("\(model.atRiskItemIDs.count) 个图标")
+        .accessibilityValue("\(filteredAtRiskItems.count) 个匹配图标")
         .accessibilityAddTraits(showAtRiskOnly ? .isSelected : [])
     }
 
