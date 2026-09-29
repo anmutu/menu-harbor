@@ -195,10 +195,36 @@ enum ItemSearch {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !needle.isEmpty else { return items }
 
-        return items.filter {
+        // 子串命中优先（精确感最强）；全部落空时退回子序列模糊匹配，
+        // 让 "wfi" 也能找到 "WiFi"——对标 Bartender Quick Search 的容错。
+        let direct = items.filter {
             $0.name.localizedCaseInsensitiveContains(needle)
                 || $0.ownerName.localizedCaseInsensitiveContains(needle)
         }
+        if !direct.isEmpty {
+            return direct
+        }
+
+        let loweredNeedle = needle.lowercased()
+        return items.filter {
+            isSubsequence(loweredNeedle, in: $0.name.lowercased())
+                || isSubsequence(loweredNeedle, in: $0.ownerName.lowercased())
+        }
+    }
+
+    /// needle 的字符是否按顺序全部出现在 haystack 中（不必连续）。
+    static func isSubsequence(
+        _ needle: some StringProtocol,
+        in haystack: some StringProtocol
+    ) -> Bool {
+        var remaining = haystack[...]
+        for character in needle {
+            guard let index = remaining.firstIndex(of: character) else {
+                return false
+            }
+            remaining = remaining[remaining.index(after: index)...]
+        }
+        return true
     }
 }
 

@@ -279,6 +279,19 @@ final class DomainTests: XCTestCase {
         XCTAssertTrue(ItemSearch.filter([descriptor], query: "calendar").isEmpty)
     }
 
+    func testSearchFallsBackToFuzzySubsequenceWhenNoDirectHit() {
+        let wifi = item("WiFi", id: 1, x: 100, owner: "Control Center")
+        let battery = item("Battery", id: 2, x: 140, owner: "Control Center")
+
+        // 无子串命中时按字符顺序模糊匹配："wfi" → WiFi，"bty" → Battery
+        XCTAssertEqual(ItemSearch.filter([wifi, battery], query: "wfi"), [wifi])
+        XCTAssertEqual(ItemSearch.filter([wifi, battery], query: "bty"), [battery])
+        // 子串命中存在时不进入模糊分支："at" 子串命中 Battery，不返回 WiFi
+        XCTAssertEqual(ItemSearch.filter([wifi, battery], query: "at"), [battery])
+        // 顺序不符不命中："wf" 可以，"fw" 不行
+        XCTAssertTrue(ItemSearch.filter([wifi], query: "fw").isEmpty)
+    }
+
     func testSelectingItemWithoutAccessibilityRequestsNativeExpansion() {
         XCTAssertEqual(
             ItemActivationPlan.make(itemExists: true, accessibility: false),
