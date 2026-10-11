@@ -59,11 +59,20 @@ final class HoverShelfController {
     private func handlePointerMove() {
         guard model.preferences.hoverOpensShelf else { return }
 
+        let location = NSEvent.mouseLocation
+
         if !shelf.isVisible {
             didOpenByHover = false
         }
 
-        if hotZone.contains(NSEvent.mouseLocation) {
+        // 热区只可能贴着屏幕顶部（主按钮/刘海/菜单栏右半侧）或 Shelf 自身。
+        // 全局 mouseMoved 事件在鼠标每次移动时都会到达，提前返回能省掉
+        // 大量无关位置的并集计算；未触发的开合任务自带热区复核，不会误开。
+        let mayTouchHotZone = shelf.isVisible
+            || NSScreen.screens.contains { location.y >= $0.frame.maxY - 64 }
+        guard mayTouchHotZone else { return }
+
+        if hotZone.contains(location) {
             closeTask?.cancel()
             closeTask = nil
             if !shelf.isVisible, !model.isShelfPresented {
@@ -88,6 +97,9 @@ final class HoverShelfController {
            let wideZone = menuBarRightZone(for: NSEvent.mouseLocation) {
             region = region.union(wideZone)
         }
+        // 主按钮窗口尚未创建（启动初期）且没有任何其他热区时，
+        // 不能让 insetBy 把零矩形吹成贴着屏幕左下角的小热区。
+        guard region != .zero else { return .zero }
         return region.insetBy(dx: -Self.hotZonePadding, dy: -Self.hotZonePadding)
     }
 

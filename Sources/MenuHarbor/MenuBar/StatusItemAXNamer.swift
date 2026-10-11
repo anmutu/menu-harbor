@@ -13,19 +13,22 @@ final class StatusItemAXNamer {
         guard !items.isEmpty else { return result }
 
         for (pid, group) in Dictionary(grouping: items, by: \.ownerPID) {
-            let elements = AccessibilityQuery.extrasMenuBarChildren(ofPID: pid)
-            guard !elements.isEmpty else { continue }
+            // 位置是 AX 跨进程往返的主要开销，同一进程的元素只读一次，
+            // 不再为组内每个条目重复读取全部元素。
+            let positionedElements: [(element: AXUIElement, position: CGPoint)] =
+                AccessibilityQuery.extrasMenuBarChildren(ofPID: pid)
+                    .compactMap { element in
+                        guard let position = AccessibilityQuery.point(element) else { return nil }
+                        return (element, position)
+                    }
+            guard !positionedElements.isEmpty else { continue }
 
             for item in group {
-                for element in elements {
-                    guard let position = AccessibilityQuery.point(element),
-                          abs(position.x - item.frame.origin.x) <= 8,
-                          abs(position.y - item.frame.origin.y) <= 8
-                    else {
-                        continue
-                    }
-                    let name = AccessibilityQuery.string(element, attribute: kAXDescriptionAttribute)
-                        ?? AccessibilityQuery.string(element, attribute: kAXTitleAttribute)
+                for positioned in positionedElements
+                where abs(positioned.position.x - item.frame.origin.x) <= 8
+                    && abs(positioned.position.y - item.frame.origin.y) <= 8 {
+                    let name = AccessibilityQuery.string(positioned.element, attribute: kAXDescriptionAttribute)
+                        ?? AccessibilityQuery.string(positioned.element, attribute: kAXTitleAttribute)
                     if let name, !name.isEmpty {
                         result[item.windowID] = name
                     }

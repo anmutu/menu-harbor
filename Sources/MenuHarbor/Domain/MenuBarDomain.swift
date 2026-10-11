@@ -188,6 +188,10 @@ enum ItemPartitioner {
 }
 
 enum ItemSearch {
+    /// 大小写、变音符号与全角字符统一折叠后比较："cafe" 命中 "Café"，
+    /// 中文输入法误切全角时输入的 "ｗｉｆｉ" 也能命中 "WiFi"。
+    private static let foldOptions: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
+
     static func filter(
         _ items: [MenuBarItemDescriptor],
         query: String
@@ -195,20 +199,21 @@ enum ItemSearch {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !needle.isEmpty else { return items }
 
+        let foldedNeedle = needle.folding(options: foldOptions, locale: .current)
+
         // 子串命中优先（精确感最强）；全部落空时退回子序列模糊匹配，
         // 让 "wfi" 也能找到 "WiFi"——对标 Bartender Quick Search 的容错。
         let direct = items.filter {
-            $0.name.localizedCaseInsensitiveContains(needle)
-                || $0.ownerName.localizedCaseInsensitiveContains(needle)
+            $0.name.folding(options: foldOptions, locale: .current).contains(foldedNeedle)
+                || $0.ownerName.folding(options: foldOptions, locale: .current).contains(foldedNeedle)
         }
         if !direct.isEmpty {
             return direct
         }
 
-        let loweredNeedle = needle.lowercased()
         return items.filter {
-            isSubsequence(loweredNeedle, in: $0.name.lowercased())
-                || isSubsequence(loweredNeedle, in: $0.ownerName.lowercased())
+            isSubsequence(foldedNeedle, in: $0.name.folding(options: foldOptions, locale: .current))
+                || isSubsequence(foldedNeedle, in: $0.ownerName.folding(options: foldOptions, locale: .current))
         }
     }
 
@@ -302,6 +307,21 @@ enum ShelfPresentation {
         return menuBarBand.intersects(item.frame) && item.frame.height <= bandHeight
     }
 
+    /// 收纳模式的展示排序：可能被刘海挡住的项目排最前（它们是港湾的
+    /// 核心价值），其余仍按菜单栏从右到左；x 并列时用窗口号稳定排序。
+    static func collectModeOrder(
+        _ items: [MenuBarItemDescriptor],
+        atRisk: Set<UInt32>
+    ) -> [MenuBarItemDescriptor] {
+        items.sorted { lhs, rhs in
+            let lhsAtRisk = atRisk.contains(lhs.windowID)
+            let rhsAtRisk = atRisk.contains(rhs.windowID)
+            guard lhsAtRisk == rhsAtRisk else { return lhsAtRisk }
+            if lhs.frame.minX == rhs.frame.minX { return lhs.windowID < rhs.windowID }
+            return lhs.frame.minX > rhs.frame.minX
+        }
+    }
+
     /// 收纳模式下的“不可达”标记。
     ///
     /// WindowServer 仍可能把被刘海遮住的状态项标记为 on-screen，所以不能只
@@ -338,6 +358,21 @@ enum ShelfPresentation {
         case nil:
             return nil
         }
+    }
+}
+
+/// 图标快照的会话内复用规则：Shelf 一次打开期间，窗口号未变且帧尺寸
+/// 未变的图标复用上一轮截图，2.5 秒轮询只补拍新增或变形的窗口，
+/// 避免每轮都对几十个窗口做全量截屏。每次重新打开 Shelf 时缓存清空，
+/// 图标外观不会跨会话过期。
+enum SnapshotReusePolicy {
+    /// 缩略图显示尺寸：真实帧太小（含 0）时抬到 18pt 下限。
+    static func snapshotSize(for frame: CGRect) -> CGSize {
+        CGSize(width: max(18, frame.width), height: max(18, frame.height))
+    }
+
+    static func shouldReuse(existingSize: CGSize, frame: CGRect) -> Bool {
+        existingSize == snapshotSize(for: frame)
     }
 }
 

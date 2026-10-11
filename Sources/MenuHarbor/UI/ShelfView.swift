@@ -363,9 +363,9 @@ struct ShelfView: View {
         }
 
         let currentIndex = min(max(model.shelfSelectionIndex, 0), model.filteredItems.count - 1)
-        model.shelfSelectionIndex = riskIndices.min {
-            abs($0 - currentIndex) < abs($1 - currentIndex)
-        } ?? riskIndices[0]
+        if let nearest = riskIndices.min(by: { abs($0 - currentIndex) < abs($1 - currentIndex) }) {
+            model.shelfSelectionIndex = nearest
+        }
     }
 }
 

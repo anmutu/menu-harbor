@@ -20,7 +20,15 @@ final class AppModel: ObservableObject {
         }
     }
     @Published var notice: String?
-    @Published var isShelfPresented = false
+    @Published var isShelfPresented = false {
+        didSet {
+            // 标记新会话：下一次真正执行的刷新全量重查名称、重截快照，
+            // 会话内的 2.5 秒轮询才走复用路径。不在这里直接清空——
+            // 若刷新恰好被 1 秒防抖跳过，清空会让图标短暂失去缩略图。
+            guard isShelfPresented, !oldValue else { return }
+            shelfSessionNeedsFreshCaches = true
+        }
+    }
     @Published var shelfSelectionIndex = 0
     /// 港湾每次显示时递增，ShelfView 借此把焦点移到搜索框。
     @Published var shelfFocusRequest = 0
@@ -43,6 +51,10 @@ final class AppModel: ObservableObject {
     private var foldHealthTask: Task<Void, Never>?
     private var screenChangeObserver: NSObjectProtocol?
     private var lastShelfRefreshAt = Date.distantPast
+    /// 会话级缓存：AX 可读名称按窗口号复用，轮询期间只补查新出现的窗口。
+    private var axNameCache: [UInt32: String] = [:]
+    /// Shelf 重新打开后置位，下一次执行的刷新先清空会话缓存再全量采集。
+    private var shelfSessionNeedsFreshCaches = false
     private var cancellables = Set<AnyCancellable>()
 
     init(
@@ -153,15 +165,11 @@ final class AppModel: ObservableObject {
     /// 收纳模式下港湾锚定的屏幕（CG 坐标），用于只取本屏菜单栏图标、
     /// 去掉同一图标在其他显示器上的副本。
     private var anchorScreenCGFrame: CGRect? {
-        guard let screen = Self.screenForMenuBar(menuBar.mainButton)
+        guard
+            let screen = Self.screenForMenuBar(menuBar.mainButton),
+            let primaryHeight = primaryScreen?.frame.maxY
         else { return nil }
-        guard let primaryHeight = primaryScreen?.frame.maxY else { return nil }
-        return CGRect(
-            x: screen.frame.minX,
-            y: primaryHeight - screen.frame.maxY,
-            width: screen.frame.width,
-            height: screen.frame.height
-        )
+        return Self.cgFrame(of: screen, primaryHeight: primaryHeight)
     }
 
     /// 刘海在 CGWindowList 使用的左上原点坐标系中的遮挡区域。
@@ -190,6 +198,11 @@ final class AppModel: ObservableObject {
             return
         }
         lastShelfRefreshAt = .now
+        if shelfSessionNeedsFreshCaches {
+            shelfSessionNeedsFreshCaches = false
+            axNameCache.removeAll()
+            snapshots = [:]
+        }
 
         permissions.refresh()
         capability = permissions.capability
@@ -205,6 +218,8 @@ final class AppModel: ObservableObject {
             guard let anchorScreenCGFrame else {
                 items = []
                 snapshots = [:]
+                atRiskItemIDs = []
+                alwaysHiddenItemIDs = []
                 presentNotice("暂时找不到当前屏幕，请稍后重试")
                 return
             }
@@ -214,20 +229,20 @@ final class AppModel: ObservableObject {
                 screenFrame: anchorScreenCGFrame,
                 rescueFrame: notchCGFrame
             ).filter { $0.ownerPID != ProcessInfo.processInfo.processIdentifier }
-            alwaysHiddenItemIDs = []
-            atRiskItemIDs = ShelfPresentation.atRiskWindowIDs(in: collectedItems, notchFrame: notchCGFrame)
-            // 把真正需要港湾的项目放在最前面；安全项目仍按菜单栏从右到左排列。
-            baseItems = collectedItems.sorted { lhs, rhs in
-                let lhsAtRisk = atRiskItemIDs.contains(lhs.windowID)
-                let rhsAtRisk = atRiskItemIDs.contains(rhs.windowID)
-                guard lhsAtRisk == rhsAtRisk else { return lhsAtRisk }
-                if lhs.frame.minX == rhs.frame.minX { return lhs.windowID < rhs.windowID }
-                return lhs.frame.minX > rhs.frame.minX
+            let riskIDs = ShelfPresentation.atRiskWindowIDs(in: collectedItems, notchFrame: notchCGFrame)
+            if atRiskItemIDs != riskIDs {
+                atRiskItemIDs = riskIDs
             }
+            if !alwaysHiddenItemIDs.isEmpty {
+                alwaysHiddenItemIDs = []
+            }
+            baseItems = ShelfPresentation.collectModeOrder(collectedItems, atRisk: riskIDs)
         } else {
             guard let dividerWindowID = menuBar.dividerWindowID else {
                 items = []
                 snapshots = [:]
+                atRiskItemIDs = []
+                alwaysHiddenItemIDs = []
                 presentNotice("暂时找不到分隔标记，请稍后重试")
                 return
             }
@@ -238,34 +253,68 @@ final class AppModel: ObservableObject {
                 screenFrames: cgScreenFrames
             )
             baseItems = partition.hidden.filter { $0.ownerPID != ProcessInfo.processInfo.processIdentifier }
-            alwaysHiddenItemIDs = Set(partition.alwaysHidden.map(\.windowID))
-            atRiskItemIDs = []
+            let alwaysIDs = Set(partition.alwaysHidden.map(\.windowID))
+            if alwaysHiddenItemIDs != alwaysIDs {
+                alwaysHiddenItemIDs = alwaysIDs
+            }
+            if !atRiskItemIDs.isEmpty {
+                atRiskItemIDs = []
+            }
         }
-        shelfSelectionIndex = min(shelfSelectionIndex, max(0, baseItems.count - 1))
+        let clampedSelection = min(shelfSelectionIndex, max(0, baseItems.count - 1))
+        if shelfSelectionIndex != clampedSelection {
+            shelfSelectionIndex = clampedSelection
+        }
 
         // Tahoe 上窗口名多为 "Item-0"、owner 统一是 Control Center，
         // 有辅助功能权限时改用 AX 的可读名称（如 "WiFi"、"飞书"）。
-        var resolved = baseItems
+        // AX 查询是跨进程往返，轮询期间只为新出现的窗口号补查。
         if permissions.hasAccessibilityPermission {
-            let names = namer.resolveNames(for: baseItems)
-            if !names.isEmpty {
-                resolved = baseItems.map { item in
-                    guard let name = names[item.windowID], !name.isEmpty else { return item }
-                    return item.withName(name)
-                }
+            let unresolved = baseItems.filter { axNameCache[$0.windowID] == nil }
+            for (windowID, name) in namer.resolveNames(for: unresolved) {
+                axNameCache[windowID] = name
             }
         }
-        items = resolved
+        let currentIDs = Set(baseItems.map(\.windowID))
+        axNameCache = axNameCache.filter { currentIDs.contains($0.key) }
+        let resolved = baseItems.map { item in
+            guard let name = axNameCache[item.windowID], !name.isEmpty else { return item }
+            return item.withName(name)
+        }
+        // 内容未变化时不重新赋值：轮询每 2.5 秒跑一次，无条件发布会
+        // 让 SwiftUI 每轮都重绘整个 Shelf。
+        if resolved != items {
+            items = resolved
+        }
 
         guard permissions.hasScreenCapturePermission else {
-            snapshots = [:]
+            if !snapshots.isEmpty {
+                snapshots = [:]
+            }
             return
         }
 
-        snapshots = Dictionary(uniqueKeysWithValues: resolved.compactMap { item in
-            let size = CGSize(width: max(18, item.frame.width), height: max(18, item.frame.height))
-            return scanner.snapshot(windowID: item.windowID, size: size).map { (item.windowID, $0) }
-        })
+        // 窗口号未变且帧尺寸未变的图标复用上一轮截图，只补拍新增/变形的。
+        var nextSnapshots = Dictionary(
+            uniqueKeysWithValues: resolved.compactMap { item -> (UInt32, NSImage)? in
+                guard let existing = snapshots[item.windowID],
+                      SnapshotReusePolicy.shouldReuse(existingSize: existing.size, frame: item.frame)
+                else { return nil }
+                return (item.windowID, existing)
+            }
+        )
+        var capturedAny = false
+        for item in resolved where nextSnapshots[item.windowID] == nil {
+            let size = SnapshotReusePolicy.snapshotSize(for: item.frame)
+            if let image = scanner.snapshot(windowID: item.windowID, size: size) {
+                nextSnapshots[item.windowID] = image
+                capturedAny = true
+            }
+        }
+        // 复用值与旧字典同实例：没有新拍且数量一致，即内容完全没变。
+        if capturedAny || nextSnapshots.count != snapshots.count {
+            snapshots = nextSnapshots
+        }
     }
 
     /// 快捷键和滚动手势的统一入口。刘海安全模式下它们打开 Shelf，
@@ -281,14 +330,17 @@ final class AppModel: ObservableObject {
     /// CG 全局坐标系（原点在主屏左上）下的所有屏幕 frame，供跨屏分区使用。
     private var cgScreenFrames: [CGRect] {
         guard let primaryHeight = primaryScreen?.frame.maxY else { return [] }
-        return NSScreen.screens.map { screen in
-            CGRect(
-                x: screen.frame.minX,
-                y: primaryHeight - screen.frame.maxY,
-                width: screen.frame.width,
-                height: screen.frame.height
-            )
-        }
+        return NSScreen.screens.map { Self.cgFrame(of: $0, primaryHeight: primaryHeight) }
+    }
+
+    /// NSScreen 坐标（原点在主屏左下）→ CG 全局坐标（原点在主屏左上）。
+    private static func cgFrame(of screen: NSScreen, primaryHeight: CGFloat) -> CGRect {
+        CGRect(
+            x: screen.frame.minX,
+            y: primaryHeight - screen.frame.maxY,
+            width: screen.frame.width,
+            height: screen.frame.height
+        )
     }
 
     private var primaryScreen: NSScreen? {
@@ -362,12 +414,12 @@ final class AppModel: ObservableObject {
             refreshShelf(force: true)
         case .failed:
             if isCollectOnlyMode {
-                menuBar.restore()
-                foldState = .expanded
+                // 收纳模式没有可展开的折叠区；图标本来就全部可见。
+                presentNotice("无法代为点击该图标，请在原生菜单栏中手动点击")
             } else {
                 expand()
+                presentNotice("无法代为点击，已安全展开原生菜单栏")
             }
-            presentNotice("无法代为点击，已安全展开原生菜单栏")
         }
     }
 
@@ -457,6 +509,12 @@ final class AppModel: ObservableObject {
         case nil:
             break
         }
+    }
+
+    /// 快捷键组合被其他应用占用时明确告知；静默失效只会让用户
+    /// 以为功能坏了（故障排查文档里"快捷键没反应"的头号原因）。
+    func reportShortcutConflict() {
+        presentNotice("快捷键注册失败：可能被其他应用占用，请在设置中录制新的组合")
     }
 
     private func updatePreferences(_ change: (inout HarborPreferences) -> Void) {
@@ -571,6 +629,13 @@ final class AppModel: ObservableObject {
             menuBar.restore()
             foldState = .expanded
             resetFoldHealth()
+            // 收纳模式下 fold() 必然被拦下；留着切屏前排下的自动收起任务，
+            // 只会在几十秒后触发一次注定失败的折叠并弹出误导性的
+            // "当前系统不支持收起图标"提示。
+            cancelAutoHide()
+        } else if foldState == .expanded {
+            // 回到折叠模式：沿用既有的自动收起节奏（delay 为 0 时是空操作）。
+            scheduleAutoHide()
         }
         if isShelfPresented {
             refreshShelf(force: true)

@@ -104,17 +104,25 @@ final class GlobalShortcut {
         }
     }
 
-    func setEnabled(_ enabled: Bool) {
-        enabled ? register() : unregister()
+    /// 返回是否达到期望状态：注册失败（组合被其他应用占用）时为 false，
+    /// 调用方需要明确告知用户，而不是让热键无声失效。
+    @discardableResult
+    func setEnabled(_ enabled: Bool) -> Bool {
+        if enabled {
+            return register()
+        }
+        unregister()
+        return true
     }
 
     /// 用户录制了新组合时更新注册；仅在当前已注册（即开关打开）时重挂。
-    func updateCombination(keyCode: UInt32, modifiers: UInt32) {
+    @discardableResult
+    func updateCombination(keyCode: UInt32, modifiers: UInt32) -> Bool {
         self.keyCode = keyCode
         self.modifiers = modifiers
-        guard hotKey != nil else { return }
+        guard hotKey != nil else { return true }
         unregister()
-        register()
+        return register()
     }
 
     private func installHandler() {
@@ -146,17 +154,21 @@ final class GlobalShortcut {
         action()
     }
 
-    private func register() {
-        guard hotKey == nil else { return }
+    private func register() -> Bool {
+        guard hotKey == nil else { return true }
         let identifier = EventHotKeyID(signature: OSType(0x4D_48_42_52), id: 1)
-        RegisterEventHotKey(
+        var candidate: EventHotKeyRef?
+        let status = RegisterEventHotKey(
             keyCode,
             modifiers,
             identifier,
             GetApplicationEventTarget(),
             0,
-            &hotKey
+            &candidate
         )
+        guard status == noErr, let candidate else { return false }
+        hotKey = candidate
+        return true
     }
 
     private func unregister() {

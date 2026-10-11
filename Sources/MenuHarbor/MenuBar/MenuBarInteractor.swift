@@ -35,12 +35,18 @@ final class MenuBarInteractor {
         case .refresh:
             return .missing
         case .expandForManualClick:
-            inCollectOnlyMode ? controller.restore() : controller.expand()
+            // 收纳模式下没有可展开的折叠区，无需改动原生菜单栏。
+            if !inCollectOnlyMode {
+                controller.expand()
+            }
             return .expandedForManualClick
         case .click:
-            // 聚合模式保持全部原生图标可见；传统折叠模式才需要先展开隐藏区。
-            inCollectOnlyMode ? controller.restore() : controller.expand()
-            try? await Task.sleep(nanoseconds: 120_000_000)
+            // 传统折叠模式先展开隐藏区并等 WindowServer 重排；
+            // 收纳模式原生图标本来就全部可见，省掉等待，点击更快。
+            if !inCollectOnlyMode {
+                controller.expand()
+                try? await Task.sleep(nanoseconds: 120_000_000)
+            }
             guard var current = scanner.descriptor(windowID: item.windowID) else { return .missing }
             if !inCollectOnlyMode, !current.isOnScreen {
                 // 始终隐藏区的项目只在整理模式（完全恢复）下可见。

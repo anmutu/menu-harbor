@@ -44,10 +44,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             keyCode: UInt32(model.preferences.shortcutKeyCode),
             modifiers: UInt32(model.preferences.shortcutModifiers)
         ) { [weak model] in model?.performPrimaryShortcut() }
-        shortcut.setEnabled(model.preferences.shortcutEnabled)
-        model.onShortcutPreferenceChanged = { [weak shortcut] enabled in shortcut?.setEnabled(enabled) }
-        model.onShortcutCombinationChanged = { [weak shortcut] code, modifiers in
-            shortcut?.updateCombination(keyCode: UInt32(code), modifiers: UInt32(modifiers))
+        if model.preferences.shortcutEnabled, !shortcut.setEnabled(true) {
+            model.reportShortcutConflict()
+        }
+        model.onShortcutPreferenceChanged = { [weak shortcut, weak model] enabled in
+            guard let shortcut else { return }
+            if enabled, !shortcut.setEnabled(true) {
+                model?.reportShortcutConflict()
+            }
+        }
+        model.onShortcutCombinationChanged = { [weak shortcut, weak model] code, modifiers in
+            guard let shortcut else { return }
+            if !shortcut.updateCombination(keyCode: UInt32(code), modifiers: UInt32(modifiers)) {
+                model?.reportShortcutConflict()
+            }
         }
 
         hover.setEnabled(model.preferences.hoverOpensShelf)

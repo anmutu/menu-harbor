@@ -44,10 +44,9 @@ final class MenuBarScrollController {
     private func handleScroll(_ event: NSEvent) {
         guard model.preferences.scrollTogglesMenuBar else { return }
         let location = NSEvent.mouseLocation
-        guard let screen = NSScreen.screens.first(where: { $0.frame.minX <= location.x && location.x <= $0.frame.maxX }),
-              let menuBarHeight = menuBarHeight(of: screen),
-              location.y >= screen.frame.maxY - menuBarHeight
-        else { return }
+        guard NSScreen.screens.contains(where: {
+            Self.isMenuBarLocation(location, screenFrame: $0.frame, visibleFrame: $0.visibleFrame)
+        }) else { return }
 
         guard Date.now >= cooldownUntil else { return }
         accumulatedDelta += abs(event.scrollingDeltaY) + abs(event.scrollingDeltaX)
@@ -58,10 +57,17 @@ final class MenuBarScrollController {
         model.performPrimaryShortcut()
     }
 
-    /// 菜单栏高度 = 屏幕高度与可见区域上沿的差（可见区域不含菜单栏，但可能含 Dock）。
-    /// 全屏空间下两者相等，返回 nil 表示该屏幕没有可交互的菜单栏。
-    private func menuBarHeight(of screen: NSScreen) -> CGFloat? {
-        let height = screen.frame.maxY - screen.visibleFrame.maxY
-        return height > 1 ? height : nil
+    /// location 是否落在这一屏的菜单栏条带内。必须同时校验 x 和 y：
+    /// 上下堆叠的显示器共享 x 范围，只按 x 选屏会把上方屏幕的任意滚动
+    /// 都误判成"在菜单栏上滚动"。全屏空间下菜单栏高度为 0，视为不可交互。
+    nonisolated static func isMenuBarLocation(
+        _ location: CGPoint,
+        screenFrame: CGRect,
+        visibleFrame: CGRect
+    ) -> Bool {
+        let menuBarHeight = screenFrame.maxY - visibleFrame.maxY
+        guard menuBarHeight > 1 else { return false }
+        guard screenFrame.minX <= location.x, location.x <= screenFrame.maxX else { return false }
+        return screenFrame.maxY - menuBarHeight <= location.y && location.y <= screenFrame.maxY
     }
 }

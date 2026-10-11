@@ -80,6 +80,25 @@ final class ShelfPanel: NSPanel {
     private static let keyCodeLeft: UInt16 = 123
     private static let keyCodeRight: UInt16 = 124
 
+    /// 面板宽度：随图标数量增长，下限 440、上限 640，且不超出安全区。
+    nonisolated static func panelWidth(forItemCount count: Int, safeFrame: CGRect) -> CGFloat {
+        min(max(440, CGFloat(count) * 68 + 80), min(640, safeFrame.width - 24))
+    }
+
+    /// 会话中菜单栏项增减时保证面板装得下。只增宽不缩宽：
+    /// 窗口号在 2.5 秒轮询间可能小幅抖动，双向自适应会让宽度反复横跳；
+    /// 重新打开时 show() 会按当时的数量重新定宽。
+    private func growToFitItemCount() {
+        guard isVisible, let currentScreen = screen ?? NSScreen.main else { return }
+        let safeFrame = currentScreen.visibleFrame
+        let target = Self.panelWidth(forItemCount: model.items.count, safeFrame: safeFrame)
+        guard target > frame.width + 0.5 else { return }
+        var next = frame
+        next.size.width = target
+        next.origin.x = min(max(frame.midX - target / 2, safeFrame.minX + 12), safeFrame.maxX - target - 12)
+        setFrame(next, display: true)
+    }
+
     deinit {
         if let resignKeyObserver {
             NotificationCenter.default.removeObserver(resignKeyObserver)
@@ -111,14 +130,16 @@ final class ShelfPanel: NSPanel {
         let targetScreen = anchor?.window?.screen ?? NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main
         guard let screen = targetScreen else { return }
 
-        model.refreshShelf()
+        // 先置 isShelfPresented：它的 didSet 标记新会话，
+        // 随后的刷新会全量重查名称与快照。
         model.isShelfPresented = true
+        model.refreshShelf()
         model.shelfFocusRequest += 1
         startRefreshLoop()
 
         let safeFrame = screen.visibleFrame
         let anchorFrame = anchor?.window?.frame ?? NSRect(x: safeFrame.midX, y: safeFrame.maxY, width: 1, height: 1)
-        let width = min(max(440, CGFloat(model.items.count) * 68 + 80), min(640, safeFrame.width - 24))
+        let width = Self.panelWidth(forItemCount: model.items.count, safeFrame: safeFrame)
         let height: CGFloat = model.items.isEmpty ? 230 : 248
         let x = min(max(anchorFrame.midX - width / 2, safeFrame.minX + 12), safeFrame.maxX - width - 12)
         let y = safeFrame.maxY - height - 8
@@ -146,7 +167,7 @@ final class ShelfPanel: NSPanel {
     }
 
     /// 菜单栏状态项会随 VPN、云盘、会议工具等应用启动/退出而变化。
-    /// 竞品会在浮窗打开期间持续同步；短轮询让港湾不需要用户手动重开或点击“重新扫描”。
+    /// 竞品会在浮窗打开期间持续同步；短轮询让港湾不需要用户手动重开或点击”重新扫描”。
     private func startRefreshLoop() {
         refreshTask?.cancel()
         refreshTask = Task { @MainActor [weak self] in
@@ -154,6 +175,7 @@ final class ShelfPanel: NSPanel {
                 try? await Task.sleep(nanoseconds: 2_500_000_000)
                 guard !Task.isCancelled, let self, self.isVisible else { return }
                 self.model.refreshShelf(force: true)
+                self.growToFitItemCount()
             }
         }
     }

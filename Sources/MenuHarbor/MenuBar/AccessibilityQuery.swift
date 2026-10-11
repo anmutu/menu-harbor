@@ -3,9 +3,14 @@ import ApplicationServices
 
 /// 辅助功能查询的共享封装：代点击的定位和图标命名共用同一套读取逻辑。
 enum AccessibilityQuery {
+    /// 单次 AX 调用等待目标进程的最长时间（秒）。系统默认约 6 秒，
+    /// 查询又发生在主线程，僵死进程会把整个 UI 卡住；1 秒足够局域内往返。
+    private static let messagingTimeout: Float = 1.0
+
     /// 读取目标进程"菜单栏附加区"（状态项区域）的全部元素。
     static func extrasMenuBarChildren(ofPID pid: Int32) -> [AXUIElement] {
         let application = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(application, messagingTimeout)
         var extrasRef: CFTypeRef?
         guard
             AXUIElementCopyAttributeValue(application, kAXExtrasMenuBarAttribute as CFString, &extrasRef) == .success,

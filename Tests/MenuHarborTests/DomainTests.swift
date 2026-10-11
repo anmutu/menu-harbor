@@ -147,6 +147,25 @@ final class DomainTests: XCTestCase {
         )
     }
 
+    func testCollectModeOrderPutsAtRiskItemsFirst() {
+        let items = [
+            item("Clock", id: 1, x: 1_300),
+            item("Under notch", id: 2, x: 1_000),
+            item("VPN", id: 3, x: 1_100),
+        ]
+
+        // 溢出项排最前；其余按菜单栏从右到左（x 降序）。
+        XCTAssertEqual(
+            ShelfPresentation.collectModeOrder(items, atRisk: [2]).map(\.name),
+            ["Under notch", "Clock", "VPN"]
+        )
+        // 无溢出时退化为纯从右到左。
+        XCTAssertEqual(
+            ShelfPresentation.collectModeOrder(items, atRisk: []).map(\.name),
+            ["Clock", "VPN", "Under notch"]
+        )
+    }
+
     func testFoldReliabilityRequiresEveryHiddenItemOffscreen() {
         let screens = [CGRect(x: 0, y: 0, width: 1_440, height: 900)]
         let offscreen = item("VPN", id: 1, x: -9_500)
@@ -292,6 +311,70 @@ final class DomainTests: XCTestCase {
         XCTAssertTrue(ItemSearch.filter([wifi], query: "fw").isEmpty)
     }
 
+    func testSearchFoldsDiacriticsAndFullWidthCharacters() {
+        let cafe = item("Café", id: 1, x: 100, owner: "Brew Co")
+        let wifi = item("WiFi", id: 2, x: 140, owner: "Control Center")
+        let bakery = item("Battery", id: 3, x: 180, owner: "Brötmark Co")
+
+        // 变音符号折叠：条目名与 owner 名都参与
+        XCTAssertEqual(ItemSearch.filter([cafe, wifi], query: "cafe"), [cafe])
+        XCTAssertEqual(ItemSearch.filter([wifi, bakery], query: "brotmark"), [bakery])
+        // 全角输入（中文输入法误切全角字母）："ｗｉｆｉ" 命中 "WiFi"
+        XCTAssertEqual(ItemSearch.filter([wifi], query: "ｗｉｆｉ"), [wifi])
+        // 模糊子序列回退路径同样折叠："cfe" 命中 "café"
+        XCTAssertEqual(ItemSearch.filter([cafe], query: "cfe"), [cafe])
+    }
+
+    func testSnapshotReuseRequiresSameDisplaySize() {
+        let frame = CGRect(x: 0, y: 0, width: 24, height: 24)
+        let size = SnapshotReusePolicy.snapshotSize(for: frame)
+        XCTAssertEqual(size, CGSize(width: 24, height: 24))
+        // 帧太小或为 0 时抬到 18pt 下限，保证缩略图仍可显示
+        XCTAssertEqual(SnapshotReusePolicy.snapshotSize(for: .zero), CGSize(width: 18, height: 18))
+
+        XCTAssertTrue(SnapshotReusePolicy.shouldReuse(existingSize: size, frame: frame))
+        // 位置移动不影响复用（同一窗口换了停靠位），显示尺寸变了才重拍
+        XCTAssertTrue(SnapshotReusePolicy.shouldReuse(
+            existingSize: size, frame: CGRect(x: 900, y: 0, width: 24, height: 24)
+        ))
+        XCTAssertFalse(SnapshotReusePolicy.shouldReuse(
+            existingSize: size, frame: CGRect(x: 0, y: 0, width: 38, height: 24)
+        ))
+    }
+
+    func testMenuBarScrollZoneRequiresBothAxesForStackedDisplays() {
+        // 上下堆叠的双屏共享 x 范围：下屏 frame(0,0,1440,900) 菜单栏 870–900，
+        // 上屏 frame(0,900,1440,1800) 菜单栏 1770–1800。
+        let lowerFrame = CGRect(x: 0, y: 0, width: 1_440, height: 900)
+        let lowerVisible = CGRect(x: 0, y: 0, width: 1_440, height: 870)
+        let upperFrame = CGRect(x: 0, y: 900, width: 1_440, height: 900)
+        let upperVisible = CGRect(x: 0, y: 900, width: 1_440, height: 870)
+
+        // 各自菜单栏条带内的滚动命中各自屏幕
+        XCTAssertTrue(MenuBarScrollController.isMenuBarLocation(
+            CGPoint(x: 720, y: 885), screenFrame: lowerFrame, visibleFrame: lowerVisible
+        ))
+        XCTAssertTrue(MenuBarScrollController.isMenuBarLocation(
+            CGPoint(x: 720, y: 1_785), screenFrame: upperFrame, visibleFrame: upperVisible
+        ))
+        // 上半屏中部滚动不得命中任何一屏；旧实现只查 x 轴会在这里误触发
+        XCTAssertFalse(MenuBarScrollController.isMenuBarLocation(
+            CGPoint(x: 720, y: 1_200), screenFrame: lowerFrame, visibleFrame: lowerVisible
+        ))
+        XCTAssertFalse(MenuBarScrollController.isMenuBarLocation(
+            CGPoint(x: 720, y: 1_200), screenFrame: upperFrame, visibleFrame: upperVisible
+        ))
+        // 屏幕正文区域与全屏空间（frame == visibleFrame，无菜单栏）不触发
+        XCTAssertFalse(MenuBarScrollController.isMenuBarLocation(
+            CGPoint(x: 720, y: 450), screenFrame: lowerFrame, visibleFrame: lowerVisible
+        ))
+        XCTAssertFalse(MenuBarScrollController.isMenuBarLocation(
+            CGPoint(x: 720, y: 450),
+            screenFrame: CGRect(x: 0, y: 0, width: 1_440, height: 900),
+            visibleFrame: CGRect(x: 0, y: 0, width: 1_440, height: 900)
+        ))
+    }
+
     func testSelectingItemWithoutAccessibilityRequestsNativeExpansion() {
         XCTAssertEqual(
             ItemActivationPlan.make(itemExists: true, accessibility: false),
@@ -333,6 +416,18 @@ final class DomainTests: XCTestCase {
         XCTAssertEqual(ShelfPresentation.missingPermission(for: .foldOnly), .screenCapture)
         XCTAssertEqual(ShelfPresentation.missingPermission(for: .browsable), .accessibility)
         XCTAssertNil(ShelfPresentation.missingPermission(for: .interactive))
+    }
+
+    func testShelfPanelWidthGrowsWithItemsAndRespectsCaps() {
+        let wideSafe = CGRect(x: 0, y: 0, width: 1_440, height: 900)
+        // 少量图标取 440 下限，随后随数量增长（每图标 68pt + 80pt 边距）
+        XCTAssertEqual(ShelfPanel.panelWidth(forItemCount: 0, safeFrame: wideSafe), 440)
+        XCTAssertEqual(ShelfPanel.panelWidth(forItemCount: 5, safeFrame: wideSafe), 440)
+        XCTAssertEqual(ShelfPanel.panelWidth(forItemCount: 6, safeFrame: wideSafe), 488)
+        // 常规屏取 640 上限；窄屏再夹到安全区内
+        XCTAssertEqual(ShelfPanel.panelWidth(forItemCount: 20, safeFrame: wideSafe), 640)
+        let narrowSafe = CGRect(x: 0, y: 0, width: 500, height: 900)
+        XCTAssertEqual(ShelfPanel.panelWidth(forItemCount: 20, safeFrame: narrowSafe), 476)
     }
 
     func testAutoHideDefersWhileShelfIsOpenOrUserIsRearranging() {

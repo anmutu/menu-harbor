@@ -24,9 +24,17 @@ final class PreferencesStoreTests: XCTestCase {
         expected.autoHideDelay = 30
         expected.iconStyle = .dot
         expected.hasCompletedOnboarding = true
+        expected.hoverOpensShelf = true
+        expected.hoverZoneWide = true
+        expected.scrollTogglesMenuBar = true
+        expected.shortcutKeyCode = 11
+        expected.shortcutModifiers = 4_608
+        expected.shortcutDisplay = "⌃⌥B"
+        expected.foldSupported = false
 
         store.save(expected)
 
+        // 覆盖全部字段：将来新增字段若没进 CodingKeys，会在这里静默丢失。
         XCTAssertEqual(store.load(), expected)
     }
 
