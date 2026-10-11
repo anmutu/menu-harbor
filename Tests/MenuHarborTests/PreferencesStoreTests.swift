@@ -25,6 +25,7 @@ final class PreferencesStoreTests: XCTestCase {
         expected.iconStyle = .dot
         expected.hasCompletedOnboarding = true
         expected.hoverOpensShelf = true
+        expected.notchLauncherEnabled = false
         expected.hoverZoneWide = true
         expected.scrollTogglesMenuBar = true
         expected.shortcutKeyCode = 11
@@ -56,6 +57,7 @@ final class PreferencesStoreTests: XCTestCase {
         XCTAssertEqual(loaded.iconStyle, .dot)
         XCTAssertTrue(loaded.launchAtLogin)
         XCTAssertFalse(loaded.hoverOpensShelf)
+        XCTAssertTrue(loaded.notchLauncherEnabled)
         XCTAssertEqual(loaded.shortcutKeyCode, HarborPreferences.defaultShortcutKeyCode)
         XCTAssertEqual(loaded.shortcutModifiers, HarborPreferences.defaultShortcutModifiers)
         XCTAssertEqual(loaded.shortcutDisplay, "⌃⌥H")

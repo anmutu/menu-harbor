@@ -29,6 +29,7 @@ final class DomainTests: XCTestCase {
         XCTAssertEqual(value.iconStyle, .harbor)
         XCTAssertFalse(value.launchAtLogin)
         XCTAssertTrue(value.hoverOpensShelf)
+        XCTAssertTrue(value.notchLauncherEnabled)
         XCTAssertFalse(value.scrollTogglesMenuBar)
         XCTAssertEqual(value.shortcutKeyCode, HarborPreferences.defaultShortcutKeyCode)
         XCTAssertEqual(value.shortcutModifiers, HarborPreferences.defaultShortcutModifiers)
@@ -36,6 +37,33 @@ final class DomainTests: XCTestCase {
         XCTAssertNil(value.foldSupported)
         XCTAssertFalse(value.hasCompletedOnboarding)
         XCTAssertFalse(value.usesCollectOnlyMode)
+    }
+
+    func testNotchLauncherCentersBelowNotchAndStaysInsideVisibleFrame() {
+        let screen = CGRect(x: 0, y: 0, width: 1_440, height: 900)
+        let visible = CGRect(x: 0, y: 0, width: 1_440, height: 876)
+        let notch = CGRect(x: 660, y: 863, width: 120, height: 37)
+
+        XCTAssertEqual(
+            NotchLauncherLayout.frame(
+                screenFrame: screen,
+                visibleFrame: visible,
+                notchFrame: notch
+            ),
+            CGRect(x: 664, y: 844, width: 112, height: 26)
+        )
+    }
+
+    func testNotchLauncherDetectsOnlyARealTopGap() {
+        XCTAssertTrue(NotchLauncherLayout.hasNotch(
+            leftArea: CGRect(x: 0, y: 0, width: 660, height: 37),
+            rightArea: CGRect(x: 780, y: 0, width: 660, height: 37)
+        ))
+        XCTAssertFalse(NotchLauncherLayout.hasNotch(leftArea: nil, rightArea: nil))
+        XCTAssertFalse(NotchLauncherLayout.hasNotch(
+            leftArea: CGRect(x: 0, y: 0, width: 700, height: 37),
+            rightArea: CGRect(x: 690, y: 0, width: 750, height: 37)
+        ))
     }
 
     func testCollectOnlyModeActivatesWhenFoldKnownUnsupported() {

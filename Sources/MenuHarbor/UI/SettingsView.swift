@@ -158,6 +158,15 @@ struct SettingsView: View {
                     .labelsHidden()
                 }
                 Divider()
+                SettingsRow(title: "刘海固定入口", subtitle: "在刘海下方显示一个固定的港湾按钮，点一下即可打开 Shelf") {
+                    Toggle("刘海固定入口", isOn: Binding(
+                        get: { model.preferences.notchLauncherEnabled },
+                        set: { model.setNotchLauncherEnabled($0) }
+                    ))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                }
+                Divider()
                 SettingsRow(title: "悬停区域扩展", subtitle: "悬停菜单栏右半侧任意位置即可打开港湾（iBar 式入口）") {
                     Toggle("悬停区域扩展", isOn: Binding(
                         get: { model.preferences.hoverZoneWide },

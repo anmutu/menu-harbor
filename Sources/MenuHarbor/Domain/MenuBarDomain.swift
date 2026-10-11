@@ -34,6 +34,8 @@ struct HarborPreferences: Codable, Equatable {
     var iconStyle: IconStyle
     var launchAtLogin: Bool
     var hoverOpensShelf: Bool
+    /// 刘海屏上是否显示一个固定的港湾入口；默认开启，用户可在设置中关闭。
+    var notchLauncherEnabled: Bool
     /// 悬停展开的热区从主按钮/刘海扩展到菜单栏右半侧（iBar 式聚合入口），
     /// 仅在 hoverOpensShelf 开启时生效。
     var hoverZoneWide: Bool
@@ -59,6 +61,7 @@ struct HarborPreferences: Codable, Equatable {
         iconStyle: .harbor,
         launchAtLogin: false,
         hoverOpensShelf: true,
+        notchLauncherEnabled: true,
         hoverZoneWide: false,
         scrollTogglesMenuBar: false,
         foldSupported: nil,
@@ -79,11 +82,40 @@ extension HarborPreferences {
             iconStyle: try container.decode(IconStyle.self, forKey: .iconStyle),
             launchAtLogin: try container.decode(Bool.self, forKey: .launchAtLogin),
             hoverOpensShelf: try container.decodeIfPresent(Bool.self, forKey: .hoverOpensShelf) ?? false,
+            notchLauncherEnabled: try container.decodeIfPresent(Bool.self, forKey: .notchLauncherEnabled) ?? true,
             hoverZoneWide: try container.decodeIfPresent(Bool.self, forKey: .hoverZoneWide) ?? false,
             scrollTogglesMenuBar: try container.decodeIfPresent(Bool.self, forKey: .scrollTogglesMenuBar) ?? false,
             foldSupported: try container.decodeIfPresent(Bool.self, forKey: .foldSupported),
             hasCompletedOnboarding: try container.decode(Bool.self, forKey: .hasCompletedOnboarding)
         )
+    }
+}
+
+/// 固定入口的几何规则与 AppKit 窗口无关，单测可以覆盖刘海居中和安全区约束。
+enum NotchLauncherLayout {
+    static let defaultSize = CGSize(width: 112, height: 26)
+    static let defaultGap: CGFloat = 6
+
+    static func hasNotch(leftArea: CGRect?, rightArea: CGRect?) -> Bool {
+        guard let leftArea, let rightArea else { return false }
+        return rightArea.minX > leftArea.maxX && leftArea.height > 0 && rightArea.height > 0
+    }
+
+    static func frame(
+        screenFrame: CGRect,
+        visibleFrame: CGRect,
+        notchFrame: CGRect?,
+        size: CGSize = defaultSize,
+        gap: CGFloat = defaultGap
+    ) -> CGRect {
+        let width = min(size.width, max(0, visibleFrame.width - 16))
+        let height = size.height
+        let centerX = notchFrame?.midX ?? screenFrame.maxX - width / 2 - 24
+        let minX = visibleFrame.minX + 8
+        let maxX = max(minX, visibleFrame.maxX - width - 8)
+        let x = min(max(centerX - width / 2, minX), maxX)
+        let y = visibleFrame.maxY - height - gap
+        return CGRect(x: x, y: y, width: width, height: height)
     }
 }
 

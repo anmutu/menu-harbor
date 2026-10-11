@@ -37,6 +37,7 @@ final class AppModel: ObservableObject {
     var onPrimaryShortcut: (() -> Void)?
     var onHoverPreferenceChanged: ((Bool) -> Void)?
     var onScrollPreferenceChanged: ((Bool) -> Void)?
+    var onNotchLauncherPreferenceChanged: ((Bool) -> Void)?
 
     private let store: PreferencesStore
     private let menuBar: MenuBarController
@@ -450,6 +451,11 @@ final class AppModel: ObservableObject {
     func setHoverOpensShelf(_ enabled: Bool) {
         updatePreferences { $0.hoverOpensShelf = enabled }
         onHoverPreferenceChanged?(enabled)
+    }
+
+    func setNotchLauncherEnabled(_ enabled: Bool) {
+        updatePreferences { $0.notchLauncherEnabled = enabled }
+        onNotchLauncherPreferenceChanged?(enabled)
     }
 
     /// 悬停控制器每次移动都直接读取偏好，这里只需持久化。

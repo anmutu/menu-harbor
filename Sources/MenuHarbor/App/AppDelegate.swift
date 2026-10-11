@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
     private var model: AppModel?
     private var shelfPanel: ShelfPanel?
+    private var notchLauncherPanel: NotchLauncherPanel?
     private var hoverController: HoverShelfController?
     private var scrollController: MenuBarScrollController?
     private var settingsWindow: NSWindow?
@@ -34,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             shelf.toggle(relativeTo: controller.mainButton)
             self.dismissOnboardingIfNeeded()
         }
+        let notchLauncher = NotchLauncherPanel(model: model, menuBar: controller, openShelf: openShelf)
         controller.onPrimaryAction = openShelf
         model.onPrimaryShortcut = openShelf
         controller.onOpenSettings = { [weak self] in self?.showSettings() }
@@ -63,15 +65,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hover.setEnabled(model.preferences.hoverOpensShelf)
         model.onHoverPreferenceChanged = { [weak hover] enabled in hover?.setEnabled(enabled) }
 
+        model.onNotchLauncherPreferenceChanged = { [weak notchLauncher] _ in
+            notchLauncher?.syncVisibility()
+        }
+
         scroll.setEnabled(model.preferences.scrollTogglesMenuBar)
         model.onScrollPreferenceChanged = { [weak scroll] enabled in scroll?.setEnabled(enabled) }
 
         menuBarController = controller
         self.model = model
         shelfPanel = shelf
+        notchLauncherPanel = notchLauncher
         hoverController = hover
         scrollController = scroll
         self.shortcut = shortcut
+        notchLauncher.syncVisibility()
 
         if !model.preferences.hasCompletedOnboarding {
             DispatchQueue.main.async { [weak self] in self?.showOnboarding() }

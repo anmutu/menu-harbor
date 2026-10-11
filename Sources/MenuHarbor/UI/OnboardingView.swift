@@ -53,7 +53,7 @@ struct OnboardingView: View {
             icon: "rectangle.bottomhalf.inset.filled",
             eyebrow: "先把空间还给你",
             title: "图标被刘海挡住？\n把它们停进港湾。",
-            message: "MenuHarbor 会把当前屏幕的菜单栏图标集中到刘海下方的港湾；原生菜单栏保持稳定，需要时搜索或点击。基础收纳不需要任何权限。"
+            message: "MenuHarbor 会在刘海下方提供一个固定入口，把当前屏幕的菜单栏图标集中到港湾；点一下即可搜索或点击。基础收纳不需要任何权限。"
         )
     }
 
