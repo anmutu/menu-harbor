@@ -235,8 +235,9 @@
   .card .ic {
     width: 34px; height: 34px; border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
-    background: var(--teal-dim); font-size: 16px; margin-bottom: 13px;
+    background: var(--teal-dim); margin-bottom: 13px; color: var(--teal);
   }
+  .card .ic svg { width: 17px; height: 17px; }
   .card h3 { font-size: 15.5px; margin-bottom: 7px; }
   .card p { font-size: 13px; color: var(--secondary); }
   .card p code {
@@ -275,6 +276,10 @@
     font-size: 12.5px; color: var(--secondary);
     background: var(--panel-2); border: 1px dashed var(--line);
     border-radius: 10px; padding: 12px 16px;
+  }
+  .gatekeeper svg {
+    width: 13px; height: 13px; vertical-align: -2px;
+    margin-right: 3px; color: var(--orange);
   }
 
   /* ---------- 隐私 ---------- */
@@ -383,47 +388,47 @@
     </div>
     <div class="grid">
       <div class="card">
-        <div class="ic">🖥</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
         <h3>刘海安全模式</h3>
         <p>带刘海的屏幕自动启用。扫描当前屏幕的菜单栏图标，集中到刘海下方展示，不需要逐个 ⌘ 拖拽整理。</p>
       </div>
       <div class="card">
-        <div class="ic">📍</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
         <h3>固定港湾入口</h3>
         <p>刘海下方常驻一个不会被挤掉的「港湾」按钮，带溢出计数；主按钮、快捷键、悬停、滚动同样可以打开。</p>
       </div>
       <div class="card">
-        <div class="ic">🧭</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></div>
         <h3>收纳模式</h3>
         <p>macOS 26 起系统会回收被折叠的图标（同类产品全部失效）。MenuHarbor 自动检测并转入收纳模式：菜单栏保持原生，港湾照常可用。</p>
       </div>
       <div class="card">
-        <div class="ic">🔍</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div>
         <h3>容错搜索</h3>
         <p>大小写、声调符号与全角字符自动折叠——<code>cafe</code> 找到 Café、全角 ｗｉｆｉ 等同 wifi；无精确命中时按字符顺序模糊匹配，<code>wfi</code> 也能找到 WiFi。</p>
       </div>
       <div class="card">
-        <div class="ic">👆</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l7 17 2.5-6.5L21 11z"/></svg></div>
         <h3>可靠代点击</h3>
         <p>开启辅助功能后，点港湾里的图标会走语义按压（AXPress）直达原生菜单项，比合成坐标点击更可靠；权限不足自动退回手动展开。</p>
       </div>
       <div class="card">
-        <div class="ic">🗂</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></div>
         <h3>三区管理</h3>
         <p>无刘海屏幕可用经典三区：可见、隐藏（双箭头左侧）、始终隐藏（竖线左侧）。按住 ⌘ 拖拽布置，一次整理长期有效。</p>
       </div>
       <div class="card">
-        <div class="ic">🩺</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-4 3 8 2-4h6"/></svg></div>
         <h3>折叠健康自检</h3>
         <p>收起后自动验证图标真的离开屏幕；系统布局行为变化导致折叠失效时，明确警告并提供一键恢复，不让图标无声丢失。</p>
       </div>
       <div class="card">
-        <div class="ic">⌨️</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6"/></svg></div>
         <h3>键盘优先</h3>
         <p>打开即聚焦搜索框，<code>←</code><code>→</code> 选择、<code>↩︎</code> 打开、<code>esc</code> 关闭；快捷键默认 <code>⌃⌥H</code>，可录制任意组合。</p>
       </div>
       <div class="card">
-        <div class="ic">🔒</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
         <h3>隐私本地</h3>
         <p>不联网、无账号、无统计。截图只在内存中短暂处理；所有偏好存在本机 UserDefaults。</p>
       </div>
@@ -451,7 +456,7 @@
           <p>基础收纳不需要任何权限；开启屏幕录制显示真实图标，开启辅助功能可直接点击。</p>
         </div>
       </div>
-      <p class="gatekeeper">⚠️ MenuHarbor 目前使用临时签名（未购买 Apple Developer ID）。macOS Gatekeeper 可能拦截首次打开：请右键点击应用选「打开」，或到 系统设置 → 隐私与安全性 中点「仍要打开」。也可以 <code style="font-size:11.5px;">make app</code> 从源码自行构建。</p>
+      <p class="gatekeeper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19z"/><path d="M12 9v5M12 17h.01"/></svg> MenuHarbor 目前使用临时签名（未购买 Apple Developer ID）。macOS Gatekeeper 可能拦截首次打开：请右键点击应用选「打开」，或到 系统设置 → 隐私与安全性 中点「仍要打开」。也可以 <code style="font-size:11.5px;">make app</code> 从源码自行构建。</p>
     </div>
   </div>
 </section>
@@ -464,14 +469,14 @@
     </div>
     <div class="perm">
       <div class="card">
-        <div class="ic">📸</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="m16 10 5-2.5v9L16 14"/></svg></div>
         <div>
           <h3>屏幕录制（可选）</h3>
           <p>截取菜单栏图标本身，在港湾里显示真实外观。图像只在内存中短暂处理，不写盘、不上传。</p>
         </div>
       </div>
       <div class="card">
-        <div class="ic">♿️</div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.5"/><path d="M4 9h16M12 9v6l-3 6M12 15l3 6"/></svg></div>
         <div>
           <h3>辅助功能（可选）</h3>
           <p>读取图标的公开名称（否则 macOS 26 下只显示 Item-0），并代你对原图标执行一次语义按压。</p>
