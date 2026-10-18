@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MenuHarbor — 刘海挡不住的菜单栏</title>
+<meta name="description" content="MenuHarbor 是原生 macOS 菜单栏溢出层：刘海挡住的图标自动集中到刘海下方的港湾，点一下仍能用。不联网、不上传、本地运行。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c1116'/%3E%3Crect x='12' y='12' width='40' height='18' rx='4' fill='%23ffffff' opacity='0.18'/%3E%3Crect x='12' y='34' width='40' height='18' rx='4' fill='%232dd4bf'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0c1116;
+    --panel: #121922;
+    --panel-2: #161f2a;
+    --line: rgba(255,255,255,0.08);
+    --text: #e6edf3;
+    --secondary: #8b98a5;
+    --teal: #2dd4bf;
+    --teal-dim: rgba(45,212,191,0.14);
+    --orange: #fb923c;
+    --orange-dim: rgba(251,146,60,0.14);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f8fa;
+      --panel: #ffffff;
+      --panel-2: #f0f3f6;
+      --line: rgba(15,23,32,0.09);
+      --text: #182230;
+      --secondary: #5b6773;
+      --teal: #0d9488;
+      --teal-dim: rgba(13,148,136,0.12);
+      --orange: #ea7317;
+      --orange-dim: rgba(234,115,23,0.12);
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+  a { color: inherit; }
+
+  /* ---------- 顶部导航 ---------- */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: saturate(1.4) blur(14px);
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .wrap {
+    display: flex; align-items: center; gap: 10px; height: 54px;
+  }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; }
+  .brand .mark {
+    width: 24px; height: 24px; border-radius: 6px;
+    background:
+      linear-gradient(to bottom, rgba(255,255,255,0.16) 0 44%, transparent 44%),
+      linear-gradient(to bottom, transparent 56%, var(--teal) 56%);
+    border: 1px solid var(--line);
+  }
+  nav .links { margin-left: auto; display: flex; gap: 22px; font-size: 13.5px; color: var(--secondary); }
+  nav .links a { text-decoration: none; }
+  nav .links a:hover { color: var(--text); }
+
+  /* ---------- Hero ---------- */
+  header { padding: 72px 0 26px; text-align: center; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 600; color: var(--teal);
+    background: var(--teal-dim); border: 1px solid color-mix(in srgb, var(--teal) 30%, transparent);
+    padding: 5px 13px; border-radius: 999px; margin-bottom: 20px;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+  h1 {
+    font-size: clamp(34px, 5.4vw, 52px);
+    line-height: 1.16; letter-spacing: -0.02em; font-weight: 800;
+  }
+  h1 em { font-style: normal; color: var(--teal); }
+  .sub {
+    max-width: 620px; margin: 18px auto 0;
+    color: var(--secondary); font-size: clamp(15px, 2vw, 17.5px);
+  }
+  .cta-row { display: flex; justify-content: center; gap: 14px; margin-top: 32px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 11px 22px; border-radius: 11px; font-size: 15px; font-weight: 650;
+    text-decoration: none; transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    color: #06251f;
+    background: linear-gradient(180deg, #43e0cc, var(--teal));
+    box-shadow: 0 10px 28px -10px rgba(45,212,191,0.55);
+  }
+  .btn-ghost {
+    color: var(--text); border: 1px solid var(--line); background: var(--panel);
+  }
+  .btn-ghost:hover { border-color: color-mix(in srgb, var(--teal) 45%, var(--line)); }
+  .req { margin-top: 14px; font-size: 12.5px; color: var(--secondary); }
+
+  /* ---------- 界面示意图（纯 CSS） ---------- */
+  .stage { padding: 44px 0 8px; }
+  .screen {
+    position: relative;
+    max-width: 760px; margin: 0 auto;
+    border: 1px solid var(--line); border-radius: 18px;
+    background:
+      radial-gradient(120% 90% at 50% -20%, color-mix(in srgb, var(--teal) 9%, transparent), transparent 55%),
+      var(--panel);
+    box-shadow: 0 40px 90px -40px rgba(0,0,0,0.55);
+    overflow: hidden;
+  }
+  .menubar {
+    position: relative; height: 30px;
+    display: flex; align-items: center;
+    background: rgba(0,0,0,0.55);
+    font-size: 12px; color: rgba(255,255,255,0.82);
+  }
+  @media (prefers-color-scheme: light) {
+    .menubar { background: rgba(20,26,34,0.86); }
+  }
+  .mb-left { display: flex; gap: 15px; padding-left: 15px; align-items: center; white-space: nowrap; }
+  .mb-left .apple { width: 13px; height: 13px; }
+  .notch {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    top: 0; width: 118px; height: 19px; background: #000; border-radius: 0 0 10px 10px;
+  }
+  .mb-right { margin-left: auto; display: flex; gap: 11px; padding-right: 13px; align-items: center; }
+  .mb-ico {
+    width: 15px; height: 15px; border-radius: 4px;
+    background: rgba(255,255,255,0.32);
+  }
+  .mb-ico.solid { background: rgba(255,255,255,0.6); }
+  .mb-ico.battery { border-radius: 3.5px; border: 1px solid rgba(255,255,255,0.5); background: linear-gradient(to right, rgba(255,255,255,0.65) 55%, transparent 55%); }
+  .mb-ico.hidden-by-notch {
+    position: relative;
+    background: repeating-linear-gradient(-45deg, rgba(251,146,60,0.75) 0 3px, rgba(251,146,60,0.28) 3px 6px);
+  }
+  .launcher {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 26px; padding: 0 13px;
+    background: rgba(28,36,46,0.72);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 999px;
+    font-size: 12px; font-weight: 650; color: #eef4f9;
+    box-shadow: 0 8px 22px -8px rgba(0,0,0,0.5);
+  }
+  .launcher .glyph { color: var(--teal); }
+  .launcher .count {
+    background: var(--orange); color: #241300;
+    font-size: 10.5px; font-weight: 800;
+    padding: 1px 6.5px; border-radius: 999px;
+  }
+  .shelf {
+    width: min(520px, 84%);
+    margin: 46px auto 26px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--panel-2) 92%, transparent);
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 60px -24px rgba(0,0,0,0.55);
+    overflow: hidden;
+  }
+  .shelf-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-bottom: 1px solid var(--line);
+    font-size: 12px; color: var(--secondary);
+  }
+  .shelf-head b { color: var(--text); font-weight: 650; }
+  .risk-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--orange-dim); color: var(--orange);
+    font-weight: 700; font-size: 11.5px;
+    padding: 3px 9px; border-radius: 7px;
+  }
+  .search {
+    margin-left: auto; display: flex; align-items: center; gap: 6px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 7px; padding: 4px 10px; font-size: 11.5px;
+    color: var(--secondary); min-width: 120px;
+  }
+  .shelf-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; padding: 14px 12px;
+  }
+  .cell { text-align: center; padding: 7px 2px; border-radius: 9px; }
+  .cell.first { background: var(--teal-dim); }
+  .cell .ic {
+    width: 26px; height: 26px; margin: 0 auto 5px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; position: relative;
+  }
+  .cell.first .ic { outline: 1.5px solid var(--teal); }
+  .cell .ic .warn {
+    position: absolute; top: -4px; right: -5px;
+    color: var(--orange); font-size: 9px; font-weight: 900;
+  }
+  .cell .lb { font-size: 9.5px; color: var(--secondary); white-space: nowrap; }
+  .i1 { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
+  .i2 { background: linear-gradient(135deg,#a78bfa,#7c3aed); }
+  .i3 { background: linear-gradient(135deg,#34d399,#059669); color:#06301e; font-weight:800; }
+  .i4 { background: linear-gradient(135deg,#f472b6,#db2777); }
+  .i5 { background: linear-gradient(135deg,#fbbf24,#d97706); color:#3a2200; font-weight:800; }
+  .i6 { background: linear-gradient(135deg,#60a5fa,#2563eb); }
+  .i7 { background: linear-gradient(135deg,#94a3b8,#475569); }
+  .shelf-foot {
+    display: flex; gap: 14px; padding: 8px 14px;
+    border-top: 1px solid var(--line);
+    font-size: 10px; color: var(--secondary);
+  }
+  .shelf-foot .spacer { margin-left: auto; }
+  .stage-note {
+    text-align: center; font-size: 12px; color: var(--secondary);
+    margin: 14px 0 0;
+  }
+
+  /* ---------- 章节 ---------- */
+  section { padding: 64px 0 8px; }
+  .sec-head { text-align: center; margin-bottom: 34px; }
+  .sec-head h2 { font-size: clamp(24px, 3.4vw, 31px); letter-spacing: -0.01em; }
+  .sec-head p { color: var(--secondary); margin-top: 10px; font-size: 15px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 780px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px 20px 18px;
+  }
+  .card .ic {
+    width: 34px; height: 34px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--teal-dim); font-size: 16px; margin-bottom: 13px;
+  }
+  .card h3 { font-size: 15.5px; margin-bottom: 7px; }
+  .card p { font-size: 13px; color: var(--secondary); }
+  .card p code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11.5px; background: var(--panel-2);
+    padding: 1px 5px; border-radius: 5px;
+  }
+
+  /* ---------- 下载 ---------- */
+  .dl {
+    text-align: center;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 18px; padding: 40px 26px 34px;
+  }
+  .dl h2 { font-size: clamp(22px, 3vw, 28px); }
+  .dl .sub { margin: 10px auto 26px; }
+  .steps {
+    display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+    margin-top: 26px; text-align: left;
+  }
+  .step {
+    flex: 1; min-width: 200px; max-width: 260px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px;
+  }
+  .step b { display: flex; align-items: center; gap: 8px; font-size: 13.5px; margin-bottom: 6px; }
+  .step .n {
+    width: 19px; height: 19px; border-radius: 50%;
+    background: var(--teal-dim); color: var(--teal);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+  }
+  .step p { font-size: 12.5px; color: var(--secondary); }
+  .gatekeeper {
+    margin: 26px auto 0; max-width: 560px;
+    font-size: 12.5px; color: var(--secondary);
+    background: var(--panel-2); border: 1px dashed var(--line);
+    border-radius: 10px; padding: 12px 16px;
+  }
+
+  /* ---------- 隐私 ---------- */
+  .perm { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .perm { grid-template-columns: 1fr; } }
+  .perm .card { display: flex; gap: 14px; align-items: flex-start; }
+  .perm .card .ic { margin-bottom: 0; flex-shrink: 0; }
+  .privacy-line {
+    text-align: center; color: var(--secondary); font-size: 13.5px;
+    margin-top: 16px;
+  }
+
+  footer {
+    margin-top: 80px; border-top: 1px solid var(--line);
+    padding: 26px 0 34px;
+  }
+  footer .wrap {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 13px; color: var(--secondary); flex-wrap: wrap;
+  }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--text); }
+  footer .spacer { margin-left: auto; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="mark"></span>MenuHarbor</div>
+    <div class="links">
+      <a href="#features">特性</a>
+      <a href="#download">下载</a>
+      <a href="#privacy">隐私</a>
+      <a href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>开源 · 本地运行 · 不联网</div>
+    <h1>刘海挡不住的<br><em>菜单栏港湾</em></h1>
+    <p class="sub">图标被刘海挤掉、被系统折叠回收？MenuHarbor 把它们集中到刘海下方的港湾：能看、能搜、能直接点，原生菜单栏保持稳定。</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/anmutu/menu-harbor/releases/latest" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M.99 9.13a.6.6 0 0 0 .6.6c.33 0 .6-.27.6-.6 0-.33-.27-.6-.6-.6-.33 0-.6.27-.6.6Zm.63-2.4 2.3-.46L5 2.85c.13-.26.44-.37.7-.24.26.13.37.44.24.7L3.85 7.1l-2.02.93a.6.6 0 0 1-.8-.3.6.6 0 0 1 .29-.8Zm12.9 5.85c-.1.32-.44.5-.76.4l-3.4-1.06-1.9 1.14a.6.6 0 0 1-.82-.2.6.6 0 0 1 .2-.82l1.65-.99-3.15-.98-2.05 1.68a.6.6 0 0 1-.84-.09.6.6 0 0 1 .09-.84l1.6-1.31-1.55-.48a.6.6 0 0 1 .36-1.15l7.42 2.31 3.44 1.07c.32.1.5.44.4.76Z"/></svg>
+        从 GitHub 下载
+      </a>
+      <a class="btn btn-ghost" href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">查看源码</a>
+    </div>
+    <p class="req">macOS 14 及以上 · Apple Silicon / Intel · MIT 开源</p>
+  </div>
+</header>
+
+<div class="stage wrap">
+  <div class="screen">
+    <div class="menubar">
+      <div class="mb-left">
+        <svg class="apple" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)"><path d="M17.05 12.54c-.03-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.8 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.24 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.38.81 1.4-.02 2.28-1.27 3.13-2.53.99-1.45 1.4-2.85 1.42-2.92-.03-.01-2.72-1.04-2.75-4.13ZM14.62 4.87c.7-.86 1.18-2.05 1.05-3.24-1.05.04-2.32.7-3.05 1.55-.66.76-1.22 1.98-1.07 3.14 1.17.09 2.37-.59 3.07-1.45Z"/></svg>
+        <span>访达</span><span>文件</span><span>编辑</span><span>显示</span>
+      </div>
+      <div class="notch"></div>
+      <div class="mb-right">
+        <span class="mb-ico hidden-by-notch" title="被刘海挡住"></span>
+        <span class="mb-ico"></span>
+        <span class="mb-ico solid"></span>
+        <span class="mb-ico"></span>
+        <span class="mb-ico battery"></span>
+      </div>
+    </div>
+
+    <div class="launcher"><span class="glyph">▾</span>港湾<span class="count">3</span></div>
+
+    <div class="shelf">
+      <div class="shelf-head">
+        <b>HARBOR</b>
+        <span>刘海安全 · 3 个溢出图标已收纳</span>
+        <span class="risk-chip">⚠ 3 只看溢出</span>
+        <span class="search"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" opacity=".55"><path d="M11.74 10.32a5.5 5.5 0 1 0-1.42 1.42l3.47 3.47a1 1 0 0 0 1.42-1.42l-3.47-3.47ZM7.5 11.5a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/></svg>搜索图标</span>
+      </div>
+      <div class="shelf-grid">
+        <div class="cell first"><div class="ic i3">W<span class="warn">▲</span></div><div class="lb">WiFi</div></div>
+        <div class="cell first"><div class="ic i1">米<span class="warn">▲</span></div><div class="lb">输入法</div></div>
+        <div class="cell first"><div class="ic i2">飞<span class="warn">▲</span></div><div class="lb">飞书</div></div>
+        <div class="cell"><div class="ic i5">D</div><div class="lb">Dropbox</div></div>
+        <div class="cell"><div class="ic i4">V</div><div class="lb">VPN</div></div>
+        <div class="cell"><div class="ic i6">Z</div><div class="lb">Zoom</div></div>
+        <div class="cell"><div class="ic i7">○</div><div class="lb">日历</div></div>
+      </div>
+      <div class="shelf-foot">
+        <span>← → 选择</span><span>↩︎ 打开</span>
+        <span class="spacer"></span>
+        <span>esc 关闭</span>
+      </div>
+    </div>
+  </div>
+  <p class="stage-note">示意图：可能被刘海挡住的图标优先排列并带警示标记，搜索支持模糊匹配</p>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>为什么是 MenuHarbor</h2>
+      <p>专注解决一个问题：让每一个菜单栏图标都可达。</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="ic">🖥</div>
+        <h3>刘海安全模式</h3>
+        <p>带刘海的屏幕自动启用。扫描当前屏幕的菜单栏图标，集中到刘海下方展示，不需要逐个 ⌘ 拖拽整理。</p>
+      </div>
+      <div class="card">
+        <div class="ic">📍</div>
+        <h3>固定港湾入口</h3>
+        <p>刘海下方常驻一个不会被挤掉的「港湾」按钮，带溢出计数；主按钮、快捷键、悬停、滚动同样可以打开。</p>
+      </div>
+      <div class="card">
+        <div class="ic">🧭</div>
+        <h3>收纳模式</h3>
+        <p>macOS 26 起系统会回收被折叠的图标（同类产品全部失效）。MenuHarbor 自动检测并转入收纳模式：菜单栏保持原生，港湾照常可用。</p>
+      </div>
+      <div class="card">
+        <div class="ic">🔍</div>
+        <h3>容错搜索</h3>
+        <p>大小写、声调符号与全角字符自动折叠——<code>cafe</code> 找到 Café、全角 ｗｉｆｉ 等同 wifi；无精确命中时按字符顺序模糊匹配，<code>wfi</code> 也能找到 WiFi。</p>
+      </div>
+      <div class="card">
+        <div class="ic">👆</div>
+        <h3>可靠代点击</h3>
+        <p>开启辅助功能后，点港湾里的图标会走语义按压（AXPress）直达原生菜单项，比合成坐标点击更可靠；权限不足自动退回手动展开。</p>
+      </div>
+      <div class="card">
+        <div class="ic">🗂</div>
+        <h3>三区管理</h3>
+        <p>无刘海屏幕可用经典三区：可见、隐藏（双箭头左侧）、始终隐藏（竖线左侧）。按住 ⌘ 拖拽布置，一次整理长期有效。</p>
+      </div>
+      <div class="card">
+        <div class="ic">🩺</div>
+        <h3>折叠健康自检</h3>
+        <p>收起后自动验证图标真的离开屏幕；系统布局行为变化导致折叠失效时，明确警告并提供一键恢复，不让图标无声丢失。</p>
+      </div>
+      <div class="card">
+        <div class="ic">⌨️</div>
+        <h3>键盘优先</h3>
+        <p>打开即聚焦搜索框，<code>←</code><code>→</code> 选择、<code>↩︎</code> 打开、<code>esc</code> 关闭；快捷键默认 <code>⌃⌥H</code>，可录制任意组合。</p>
+      </div>
+      <div class="card">
+        <div class="ic">🔒</div>
+        <h3>隐私本地</h3>
+        <p>不联网、无账号、无统计。截图只在内存中短暂处理；所有偏好存在本机 UserDefaults。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <div class="dl">
+      <h2>下载 MenuHarbor</h2>
+      <p class="sub">当前版本 v0.5.0 · 免费开源（MIT）</p>
+      <a class="btn btn-primary" href="https://github.com/anmutu/menu-harbor/releases/latest" target="_blank" rel="noopener">前往 GitHub Releases</a>
+      <div class="steps">
+        <div class="step">
+          <b><span class="n">1</span>下载解压</b>
+          <p>从 GitHub Releases 下载最新压缩包，解压出 MenuHarbor.app，拖入「应用程序」文件夹。</p>
+        </div>
+        <div class="step">
+          <b><span class="n">2</span>首次打开</b>
+          <p>在访达中<b>右键 → 打开</b>再点「打开」（见下方说明）。首次运行有三步引导。</p>
+        </div>
+        <div class="step">
+          <b><span class="n">3</span>按需授权</b>
+          <p>基础收纳不需要任何权限；开启屏幕录制显示真实图标，开启辅助功能可直接点击。</p>
+        </div>
+      </div>
+      <p class="gatekeeper">⚠️ MenuHarbor 目前使用临时签名（未购买 Apple Developer ID）。macOS Gatekeeper 可能拦截首次打开：请右键点击应用选「打开」，或到 系统设置 → 隐私与安全性 中点「仍要打开」。也可以 <code style="font-size:11.5px;">make app</code> 从源码自行构建。</p>
+    </div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>权限与隐私</h2>
+      <p>基础功能免授权。两项可选权限都在本机使用。</p>
+    </div>
+    <div class="perm">
+      <div class="card">
+        <div class="ic">📸</div>
+        <div>
+          <h3>屏幕录制（可选）</h3>
+          <p>截取菜单栏图标本身，在港湾里显示真实外观。图像只在内存中短暂处理，不写盘、不上传。</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ic">♿️</div>
+        <div>
+          <h3>辅助功能（可选）</h3>
+          <p>读取图标的公开名称（否则 macOS 26 下只显示 Item-0），并代你对原图标执行一次语义按压。</p>
+        </div>
+      </div>
+    </div>
+    <p class="privacy-line">不联网 · 无账号 · 无统计 · 详细说明见仓库 <a href="https://github.com/anmutu/menu-harbor/blob/main/docs/privacy.md" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:none;">privacy.md</a></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 anmutu</span>
+    <span><a href="https://github.com/anmutu/menu-harbor/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></span>
+    <span class="spacer"></span>
+    <span><a href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">GitHub</a></span>
+    <span><a href="https://github.com/anmutu/menu-harbor/releases" target="_blank" rel="noopener">Releases</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

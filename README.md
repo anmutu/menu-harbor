@@ -2,6 +2,8 @@
 
 MenuHarbor 是一个原生 macOS 菜单栏溢出层：**刘海挡住的菜单栏图标，自动集中到刘海下方的港湾，点一下仍能用，同时保持原生菜单栏稳定。**
 
+> 🌐 官网：<https://anmutu.github.io/menu-harbor/> · 下载：<https://github.com/anmutu/menu-harbor/releases>
+
 ## 现在能做什么
 
 - **刘海安全模式（带刘海的屏幕自动启用）**：不需要逐个按住 ⌘ 拖图标，港湾会扫描当前屏幕的菜单栏图标，在刘海下方展示并支持搜索。
