@@ -3,497 +3,532 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MenuHarbor — 刘海挡不住的菜单栏</title>
-<meta name="description" content="MenuHarbor 是原生 macOS 菜单栏溢出层：刘海挡住的图标自动集中到刘海下方的港湾，点一下仍能用。不联网、不上传、本地运行。">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c1116'/%3E%3Crect x='12' y='12' width='40' height='18' rx='4' fill='%23ffffff' opacity='0.18'/%3E%3Crect x='12' y='34' width='40' height='18' rx='4' fill='%232dd4bf'/%3E%3C/svg%3E">
+<title>MenuHarbor — 菜单栏港湾</title>
+<meta name="description" content="MenuHarbor 是原生 macOS 菜单栏溢出层：刘海挡住的图标自动集中到刘海下方的港湾，能看、能搜、能直接点。不联网、不上传、本地运行。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23f8f5ef'/%3E%3Crect x='10' y='10' width='44' height='14' fill='none' stroke='%231c1917' stroke-width='3'/%3E%3Crect x='10' y='36' width='44' height='14' fill='%230f766e'/%3E%3C/svg%3E">
 <style>
   :root {
-    --bg: #0c1116;
-    --panel: #121922;
-    --panel-2: #161f2a;
-    --line: rgba(255,255,255,0.08);
-    --text: #e6edf3;
-    --secondary: #8b98a5;
-    --teal: #2dd4bf;
-    --teal-dim: rgba(45,212,191,0.14);
-    --orange: #fb923c;
-    --orange-dim: rgba(251,146,60,0.14);
-  }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f6f8fa;
-      --panel: #ffffff;
-      --panel-2: #f0f3f6;
-      --line: rgba(15,23,32,0.09);
-      --text: #182230;
-      --secondary: #5b6773;
-      --teal: #0d9488;
-      --teal-dim: rgba(13,148,136,0.12);
-      --orange: #ea7317;
-      --orange-dim: rgba(234,115,23,0.12);
-    }
+    --paper: #f8f5ef;
+    --paper-deep: #f2ede3;
+    --ink: #1c1917;
+    --ink-soft: #4a443c;
+    --ink-faint: #857d72;
+    --hairline: rgba(28, 25, 23, 0.22);
+    --hairline-soft: rgba(28, 25, 23, 0.12);
+    --teal: #0f766e;
+    --teal-soft: rgba(15, 118, 110, 0.09);
+    --serif: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    line-height: 1.9;
     -webkit-font-smoothing: antialiased;
-    line-height: 1.65;
+    text-rendering: optimizeLegibility;
   }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
-  a { color: inherit; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 28px; }
+  a { color: inherit; text-decoration: none; }
+  p { text-align: justify; }
+  ::selection { background: var(--teal-soft); }
 
-  /* ---------- 顶部导航 ---------- */
-  nav {
-    position: sticky; top: 0; z-index: 10;
-    backdrop-filter: saturate(1.4) blur(14px);
-    background: color-mix(in srgb, var(--bg) 78%, transparent);
-    border-bottom: 1px solid var(--line);
+  /* ---------- 报头 ---------- */
+  .masthead { border-bottom: 1px solid var(--ink); }
+  .masthead .wrap {
+    display: flex; align-items: baseline; gap: 18px;
+    padding-top: 26px; padding-bottom: 10px;
   }
-  nav .wrap {
-    display: flex; align-items: center; gap: 10px; height: 54px;
+  .masthead .title {
+    font-size: 21px; font-weight: 900; letter-spacing: 0.14em;
   }
-  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; }
-  .brand .mark {
-    width: 24px; height: 24px; border-radius: 6px;
-    background:
-      linear-gradient(to bottom, rgba(255,255,255,0.16) 0 44%, transparent 44%),
-      linear-gradient(to bottom, transparent 56%, var(--teal) 56%);
-    border: 1px solid var(--line);
+  .masthead .issue {
+    font-size: 12px; color: var(--ink-faint); letter-spacing: 0.08em;
   }
-  nav .links { margin-left: auto; display: flex; gap: 22px; font-size: 13.5px; color: var(--secondary); }
-  nav .links a { text-decoration: none; }
-  nav .links a:hover { color: var(--text); }
+  .masthead nav { margin-left: auto; display: flex; gap: 22px; font-size: 13.5px; }
+  .masthead nav a { padding-bottom: 2px; border-bottom: 1px solid transparent; }
+  .masthead nav a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+  .masthead-bar { border-top: 1px solid var(--ink); border-bottom: 1px solid var(--hairline); }
+  .masthead-bar .wrap {
+    display: flex; justify-content: space-between; gap: 12px;
+    font-size: 11.5px; color: var(--ink-faint); letter-spacing: 0.14em;
+    padding-top: 6px; padding-bottom: 6px;
+  }
 
-  /* ---------- Hero ---------- */
-  header { padding: 72px 0 26px; text-align: center; }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 7px;
-    font-size: 12.5px; font-weight: 600; color: var(--teal);
-    background: var(--teal-dim); border: 1px solid color-mix(in srgb, var(--teal) 30%, transparent);
-    padding: 5px 13px; border-radius: 999px; margin-bottom: 20px;
+  /* ---------- 开篇 ---------- */
+  .opening { position: relative; padding: 78px 0 30px; }
+  .opening .side-note {
+    position: absolute; right: -8px; top: 86px;
+    writing-mode: vertical-rl;
+    font-size: 11.5px; letter-spacing: 0.42em;
+    color: var(--ink-faint);
   }
-  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+  @media (max-width: 1020px) { .opening .side-note { display: none; } }
   h1 {
-    font-size: clamp(34px, 5.4vw, 52px);
-    line-height: 1.16; letter-spacing: -0.02em; font-weight: 800;
+    font-size: clamp(36px, 6.4vw, 62px);
+    line-height: 1.38; font-weight: 900; letter-spacing: 0.045em;
+    text-align: left;
   }
   h1 em { font-style: normal; color: var(--teal); }
-  .sub {
-    max-width: 620px; margin: 18px auto 0;
-    color: var(--secondary); font-size: clamp(15px, 2vw, 17.5px);
+  .lede {
+    max-width: 620px; margin-top: 26px;
+    font-size: 16.5px; color: var(--ink-soft);
   }
-  .cta-row { display: flex; justify-content: center; gap: 14px; margin-top: 32px; flex-wrap: wrap; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 9px;
-    padding: 11px 22px; border-radius: 11px; font-size: 15px; font-weight: 650;
-    text-decoration: none; transition: transform .12s ease, box-shadow .12s ease;
+  .cta-row { display: flex; align-items: baseline; gap: 26px; margin-top: 34px; flex-wrap: wrap; }
+  .cta {
+    display: inline-flex; align-items: baseline; gap: 8px;
+    font-size: 15.5px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--paper); background: var(--ink);
+    padding: 11px 26px 12px;
+    transition: background .15s ease;
   }
-  .btn:active { transform: scale(0.98); }
-  .btn-primary {
-    color: #06251f;
-    background: linear-gradient(180deg, #43e0cc, var(--teal));
-    box-shadow: 0 10px 28px -10px rgba(45,212,191,0.55);
+  .cta:hover { background: var(--teal); }
+  .cta-plain {
+    font-size: 14.5px; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 3px;
   }
-  .btn-ghost {
-    color: var(--text); border: 1px solid var(--line); background: var(--panel);
-  }
-  .btn-ghost:hover { border-color: color-mix(in srgb, var(--teal) 45%, var(--line)); }
-  .req { margin-top: 14px; font-size: 12.5px; color: var(--secondary); }
+  .cta-plain:hover { color: var(--teal); border-bottom-color: var(--teal); }
+  .req { margin-top: 16px; font-size: 12.5px; color: var(--ink-faint); letter-spacing: 0.06em; }
 
-  /* ---------- 界面示意图（纯 CSS） ---------- */
-  .stage { padding: 44px 0 8px; }
-  .screen {
-    position: relative;
-    max-width: 760px; margin: 0 auto;
-    border: 1px solid var(--line); border-radius: 18px;
-    background:
-      radial-gradient(120% 90% at 50% -20%, color-mix(in srgb, var(--teal) 9%, transparent), transparent 55%),
-      var(--panel);
-    box-shadow: 0 40px 90px -40px rgba(0,0,0,0.55);
-    overflow: hidden;
+  /* ---------- 图版 ---------- */
+  .plate { padding: 44px 0 6px; }
+  figure { border: 1px solid var(--hairline); background: var(--paper-deep); }
+  figcaption {
+    border-top: 1px solid var(--hairline);
+    font-size: 12px; color: var(--ink-faint); letter-spacing: 0.1em;
+    padding: 9px 16px; text-align: center;
   }
+  figcaption b { color: var(--ink-soft); font-weight: 700; }
+
+  /* 线稿示意：菜单栏 + 刘海 + 港湾入口 + Shelf */
+  .drawing { padding: 34px 26px 30px; }
+  .screenline { border: 1.5px solid var(--ink); background: var(--paper); }
   .menubar {
-    position: relative; height: 30px;
+    position: relative; height: 34px;
     display: flex; align-items: center;
-    background: rgba(0,0,0,0.55);
-    font-size: 12px; color: rgba(255,255,255,0.82);
+    border-bottom: 1px solid var(--hairline);
+    font-size: 11.5px; color: var(--ink-soft); letter-spacing: 0.04em;
   }
-  @media (prefers-color-scheme: light) {
-    .menubar { background: rgba(20,26,34,0.86); }
-  }
-  .mb-left { display: flex; gap: 15px; padding-left: 15px; align-items: center; white-space: nowrap; }
-  .mb-left .apple { width: 13px; height: 13px; }
+  .mb-left { display: flex; gap: 14px; padding-left: 14px; align-items: center; white-space: nowrap; }
+  .mb-left svg { display: block; }
   .notch {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    top: 0; width: 118px; height: 19px; background: #000; border-radius: 0 0 10px 10px;
+    position: absolute; left: 50%; transform: translateX(-50%); top: -1.5px;
+    width: 112px; height: 21px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink); border-top: none;
+    border-radius: 0 0 9px 9px;
   }
-  .mb-right { margin-left: auto; display: flex; gap: 11px; padding-right: 13px; align-items: center; }
-  .mb-ico {
-    width: 15px; height: 15px; border-radius: 4px;
-    background: rgba(255,255,255,0.32);
+  .mb-right { margin-left: auto; display: flex; gap: 12px; padding-right: 14px; align-items: center; }
+  .mb-ico { width: 13px; height: 13px; border: 1.2px solid var(--ink-soft); border-radius: 3px; }
+  .mb-ico.round { border-radius: 50%; }
+  .mb-ico.batt { border-radius: 2px; position: relative; }
+  .mb-ico.batt::after {
+    content: ""; position: absolute; inset: 2px 5px 2px 2px;
+    background: var(--ink-soft);
   }
-  .mb-ico.solid { background: rgba(255,255,255,0.6); }
-  .mb-ico.battery { border-radius: 3.5px; border: 1px solid rgba(255,255,255,0.5); background: linear-gradient(to right, rgba(255,255,255,0.65) 55%, transparent 55%); }
-  .mb-ico.hidden-by-notch {
-    position: relative;
-    background: repeating-linear-gradient(-45deg, rgba(251,146,60,0.75) 0 3px, rgba(251,146,60,0.28) 3px 6px);
+  .mb-ico.hidden {
+    border-style: dashed; border-color: var(--teal);
+  }
+  .mb-ico.hidden::after {
+    content: "▲"; position: absolute; left: 15px; top: -4px;
+    font-size: 8px; color: var(--teal);
   }
   .launcher {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    margin-top: 8px;
-    display: inline-flex; align-items: center; gap: 6px;
-    height: 26px; padding: 0 13px;
-    background: rgba(28,36,46,0.72);
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 999px;
-    font-size: 12px; font-weight: 650; color: #eef4f9;
-    box-shadow: 0 8px 22px -8px rgba(0,0,0,0.5);
+    display: flex; justify-content: center; margin-top: 9px;
   }
-  .launcher .glyph { color: var(--teal); }
-  .launcher .count {
-    background: var(--orange); color: #241300;
-    font-size: 10.5px; font-weight: 800;
-    padding: 1px 6.5px; border-radius: 999px;
+  .launcher .pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 27px; padding: 0 14px;
+    background: var(--teal); color: var(--paper);
+    border-radius: 999px;
+    font-size: 12px; letter-spacing: 0.14em;
+  }
+  .launcher .pill .count {
+    background: var(--paper); color: var(--teal);
+    font-size: 10.5px; font-weight: 700;
+    padding: 0 6px; border-radius: 999px; line-height: 17px;
   }
   .shelf {
-    width: min(520px, 84%);
-    margin: 46px auto 26px;
-    border-radius: 14px;
-    background: color-mix(in srgb, var(--panel-2) 92%, transparent);
-    border: 1px solid var(--line);
-    box-shadow: 0 24px 60px -24px rgba(0,0,0,0.55);
-    overflow: hidden;
+    width: min(560px, 92%);
+    margin: 22px auto 0;
+    border: 1px solid var(--ink);
+    background: var(--paper);
   }
   .shelf-head {
     display: flex; align-items: center; gap: 10px;
-    padding: 10px 14px; border-bottom: 1px solid var(--line);
-    font-size: 12px; color: var(--secondary);
+    padding: 9px 13px; border-bottom: 1px solid var(--hairline);
+    font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em;
   }
-  .shelf-head b { color: var(--text); font-weight: 650; }
+  .shelf-head b { font-size: 11.5px; letter-spacing: 0.22em; color: var(--ink); font-weight: 900; }
   .risk-chip {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: var(--orange-dim); color: var(--orange);
-    font-weight: 700; font-size: 11.5px;
-    padding: 3px 9px; border-radius: 7px;
+    display: inline-flex; align-items: center; gap: 4px;
+    border: 1px solid var(--teal); color: var(--teal);
+    font-weight: 700; font-size: 10.5px; letter-spacing: 0.05em;
+    padding: 1px 8px; border-radius: 999px;
   }
+  .risk-chip::before { content: "▲"; font-size: 8px; }
   .search {
     margin-left: auto; display: flex; align-items: center; gap: 6px;
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 7px; padding: 4px 10px; font-size: 11.5px;
-    color: var(--secondary); min-width: 120px;
+    border: 1px solid var(--hairline);
+    padding: 3px 9px; font-size: 10.5px; color: var(--ink-faint); min-width: 112px;
   }
+  .search svg { flex-shrink: 0; }
   .shelf-grid {
     display: grid; grid-template-columns: repeat(7, 1fr);
-    gap: 4px; padding: 14px 12px;
+    padding: 14px 12px 12px; column-gap: 4px;
   }
-  .cell { text-align: center; padding: 7px 2px; border-radius: 9px; }
-  .cell.first { background: var(--teal-dim); }
+  .cell { text-align: center; }
   .cell .ic {
-    width: 26px; height: 26px; margin: 0 auto 5px; border-radius: 7px;
+    width: 27px; height: 27px; margin: 0 auto 6px;
+    border: 1.2px solid var(--ink-soft); border-radius: 7px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; position: relative;
+    font-size: 12.5px; position: relative;
+    background: var(--paper);
   }
-  .cell.first .ic { outline: 1.5px solid var(--teal); }
-  .cell .ic .warn {
-    position: absolute; top: -4px; right: -5px;
-    color: var(--orange); font-size: 9px; font-weight: 900;
+  .cell.first .ic { border: 1.6px solid var(--teal); color: var(--teal); font-weight: 700; }
+  .cell.first .ic::after {
+    content: "▲"; position: absolute; top: -7px; right: -6px;
+    font-size: 8px; color: var(--teal);
   }
-  .cell .lb { font-size: 9.5px; color: var(--secondary); white-space: nowrap; }
-  .i1 { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
-  .i2 { background: linear-gradient(135deg,#a78bfa,#7c3aed); }
-  .i3 { background: linear-gradient(135deg,#34d399,#059669); color:#06301e; font-weight:800; }
-  .i4 { background: linear-gradient(135deg,#f472b6,#db2777); }
-  .i5 { background: linear-gradient(135deg,#fbbf24,#d97706); color:#3a2200; font-weight:800; }
-  .i6 { background: linear-gradient(135deg,#60a5fa,#2563eb); }
-  .i7 { background: linear-gradient(135deg,#94a3b8,#475569); }
+  .cell .lb { font-size: 10px; color: var(--ink-faint); white-space: nowrap; }
   .shelf-foot {
-    display: flex; gap: 14px; padding: 8px 14px;
-    border-top: 1px solid var(--line);
-    font-size: 10px; color: var(--secondary);
+    display: flex; gap: 14px; padding: 7px 13px;
+    border-top: 1px solid var(--hairline);
+    font-size: 9.5px; color: var(--ink-faint); letter-spacing: 0.05em;
   }
   .shelf-foot .spacer { margin-left: auto; }
-  .stage-note {
-    text-align: center; font-size: 12px; color: var(--secondary);
-    margin: 14px 0 0;
+
+  /* ---------- 篇章 ---------- */
+  section { padding: 58px 0 8px; }
+  .rubric {
+    display: flex; align-items: baseline; gap: 16px;
+    border-top: 3px double var(--ink);
+    padding-top: 14px; margin-bottom: 30px;
+  }
+  .rubric .no {
+    font-size: 13px; color: var(--teal); font-weight: 700; letter-spacing: 0.2em;
+  }
+  .rubric h2 { font-size: clamp(23px, 3.4vw, 30px); font-weight: 900; letter-spacing: 0.1em; }
+  .rubric .en { margin-left: auto; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.3em; }
+
+  .foreword {
+    max-width: 640px;
+    font-size: 15.5px; color: var(--ink-soft);
+    margin-bottom: 10px;
   }
 
-  /* ---------- 章节 ---------- */
-  section { padding: 64px 0 8px; }
-  .sec-head { text-align: center; margin-bottom: 34px; }
-  .sec-head h2 { font-size: clamp(24px, 3.4vw, 31px); letter-spacing: -0.01em; }
-  .sec-head p { color: var(--secondary); margin-top: 10px; font-size: 15px; }
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  @media (max-width: 780px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 540px) { .grid { grid-template-columns: 1fr; } }
-  .card {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 14px; padding: 20px 20px 18px;
+  .cols {
+    display: grid; grid-template-columns: 1fr 1fr;
+    column-gap: 44px; row-gap: 0;
   }
-  .card .ic {
-    width: 34px; height: 34px; border-radius: 9px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--teal-dim); margin-bottom: 13px; color: var(--teal);
+  @media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
+  .entry {
+    padding: 18px 0 20px;
+    border-bottom: 1px solid var(--hairline-soft);
+    display: grid; grid-template-columns: 44px 1fr; column-gap: 14px;
   }
-  .card .ic svg { width: 17px; height: 17px; }
-  .card h3 { font-size: 15.5px; margin-bottom: 7px; }
-  .card p { font-size: 13px; color: var(--secondary); }
-  .card p code {
+  .entry .num {
+    font-size: 15px; color: var(--teal); font-weight: 700;
+    padding-top: 1px; letter-spacing: 0.05em;
+  }
+  .entry h3 { font-size: 16.5px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .entry p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.85; }
+  .entry code {
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-size: 11.5px; background: var(--panel-2);
-    padding: 1px 5px; border-radius: 5px;
+    font-size: 11.5px; background: var(--paper-deep);
+    padding: 0 5px; border-radius: 3px;
   }
 
-  /* ---------- 下载 ---------- */
-  .dl {
-    text-align: center;
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 18px; padding: 40px 26px 34px;
+  /* ---------- 获取 ---------- */
+  .colophon-lines {
+    display: grid; grid-template-columns: repeat(4, auto); justify-content: start;
+    gap: 10px 38px;
+    font-size: 13px; color: var(--ink-soft);
+    border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+    padding: 12px 2px; margin-bottom: 34px;
+    letter-spacing: 0.04em;
   }
-  .dl h2 { font-size: clamp(22px, 3vw, 28px); }
-  .dl .sub { margin: 10px auto 26px; }
-  .steps {
-    display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
-    margin-top: 26px; text-align: left;
+  .colophon-lines b { color: var(--ink); }
+  @media (max-width: 720px) { .colophon-lines { grid-template-columns: 1fr 1fr; } }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
+  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } }
+  .step { border-top: 1px solid var(--ink); padding-top: 12px; }
+  .step .num { font-size: 13px; color: var(--teal); font-weight: 700; letter-spacing: 0.18em; }
+  .step h3 { font-size: 16px; font-weight: 700; margin: 6px 0 6px; letter-spacing: 0.05em; }
+  .step p { font-size: 13px; color: var(--ink-soft); }
+  .footnote {
+    margin-top: 30px; max-width: 640px;
+    font-size: 12.5px; color: var(--ink-faint); line-height: 1.85;
   }
-  .step {
-    flex: 1; min-width: 200px; max-width: 260px;
-    background: var(--panel-2); border: 1px solid var(--line);
-    border-radius: 12px; padding: 16px;
-  }
-  .step b { display: flex; align-items: center; gap: 8px; font-size: 13.5px; margin-bottom: 6px; }
-  .step .n {
-    width: 19px; height: 19px; border-radius: 50%;
-    background: var(--teal-dim); color: var(--teal);
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 800;
-  }
-  .step p { font-size: 12.5px; color: var(--secondary); }
-  .gatekeeper {
-    margin: 26px auto 0; max-width: 560px;
-    font-size: 12.5px; color: var(--secondary);
-    background: var(--panel-2); border: 1px dashed var(--line);
-    border-radius: 10px; padding: 12px 16px;
-  }
-  .gatekeeper svg {
-    width: 13px; height: 13px; vertical-align: -2px;
-    margin-right: 3px; color: var(--orange);
-  }
+  .footnote .mark { color: var(--teal); margin-right: 4px; }
 
   /* ---------- 隐私 ---------- */
-  .perm { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  @media (max-width: 640px) { .perm { grid-template-columns: 1fr; } }
-  .perm .card { display: flex; gap: 14px; align-items: flex-start; }
-  .perm .card .ic { margin-bottom: 0; flex-shrink: 0; }
+  .perm { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; }
+  @media (max-width: 720px) { .perm { grid-template-columns: 1fr; } }
+  .perm .entry { grid-template-columns: 1fr; }
+  .perm .entry h3 { display: flex; align-items: baseline; gap: 10px; }
+  .perm .entry h3 small { font-size: 11px; color: var(--teal); letter-spacing: 0.2em; font-weight: 700; }
   .privacy-line {
-    text-align: center; color: var(--secondary); font-size: 13.5px;
-    margin-top: 16px;
+    margin-top: 24px; font-size: 13.5px; color: var(--ink-soft); text-align: center;
+    letter-spacing: 0.04em;
   }
+  .privacy-line a { border-bottom: 1px solid var(--hairline); color: var(--teal); }
+  .privacy-line a:hover { border-bottom-color: var(--teal); }
 
+  /* ---------- 版权页 ---------- */
   footer {
-    margin-top: 80px; border-top: 1px solid var(--line);
-    padding: 26px 0 34px;
+    margin-top: 88px;
+    border-top: 1px solid var(--ink);
+    padding: 22px 0 40px;
   }
   footer .wrap {
-    display: flex; align-items: center; gap: 18px;
-    font-size: 13px; color: var(--secondary); flex-wrap: wrap;
+    display: flex; align-items: baseline; gap: 20px;
+    font-size: 12px; color: var(--ink-faint); flex-wrap: wrap;
+    letter-spacing: 0.06em;
   }
-  footer a { text-decoration: none; }
-  footer a:hover { color: var(--text); }
+  footer a:hover { color: var(--teal); }
   footer .spacer { margin-left: auto; }
+  footer .note { width: 100%; font-size: 11.5px; color: var(--ink-faint); opacity: 0.75; }
 </style>
 </head>
 <body>
 
-<nav>
+<!-- 报头 -->
+<div class="masthead">
   <div class="wrap">
-    <div class="brand"><span class="mark"></span>MenuHarbor</div>
-    <div class="links">
+    <div class="title">MENUHARBOR</div>
+    <div class="issue">菜单栏港湾 · 第 1 卷</div>
+    <nav>
       <a href="#features">特性</a>
-      <a href="#download">下载</a>
+      <a href="#download">获取</a>
       <a href="#privacy">隐私</a>
-      <a href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">GitHub</a>
-    </div>
+      <a href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
   </div>
-</nav>
-
-<header>
+</div>
+<div class="masthead-bar">
   <div class="wrap">
-    <div class="eyebrow"><span class="dot"></span>开源 · 本地运行 · 不联网</div>
-    <h1>刘海挡不住的<br><em>菜单栏港湾</em></h1>
-    <p class="sub">图标被刘海挤掉、被系统折叠回收？MenuHarbor 把它们集中到刘海下方的港湾：能看、能搜、能直接点，原生菜单栏保持稳定。</p>
+    <span>原生 macOS · 刘海之下</span>
+    <span>开源 · 本地运行 · 不联网</span>
+    <span>二〇二六年十月</span>
+  </div>
+</div>
+
+<!-- 开篇 -->
+<header class="opening">
+  <div class="wrap">
+    <div class="side-note">被刘海藏起来的，都该有港可停</div>
+    <h1>被刘海藏起来的<br>每一个图标，<em>都该有港可停。</em></h1>
+    <p class="lede">MacBook 的刘海越来越宽，菜单栏的图标越来越多。二者相遇时，总有一些图标被挤出屏幕，再也点不到。MenuHarbor 在刘海下方修了一座港湾——被挡住的图标自动停靠于此，能看、能搜、也能直接点；原生菜单栏保持原样，不动声色。</p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="https://github.com/anmutu/menu-harbor/releases/latest" target="_blank" rel="noopener">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M.99 9.13a.6.6 0 0 0 .6.6c.33 0 .6-.27.6-.6 0-.33-.27-.6-.6-.6-.33 0-.6.27-.6.6Zm.63-2.4 2.3-.46L5 2.85c.13-.26.44-.37.7-.24.26.13.37.44.24.7L3.85 7.1l-2.02.93a.6.6 0 0 1-.8-.3.6.6 0 0 1 .29-.8Zm12.9 5.85c-.1.32-.44.5-.76.4l-3.4-1.06-1.9 1.14a.6.6 0 0 1-.82-.2.6.6 0 0 1 .2-.82l1.65-.99-3.15-.98-2.05 1.68a.6.6 0 0 1-.84-.09.6.6 0 0 1 .09-.84l1.6-1.31-1.55-.48a.6.6 0 0 1 .36-1.15l7.42 2.31 3.44 1.07c.32.1.5.44.4.76Z"/></svg>
-        从 GitHub 下载
-      </a>
-      <a class="btn btn-ghost" href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">查看源码</a>
+      <a class="cta" href="https://github.com/anmutu/menu-harbor/releases/latest" target="_blank" rel="noopener">下载 MenuHarbor ↓</a>
+      <a class="cta-plain" href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">阅读源码</a>
     </div>
-    <p class="req">macOS 14 及以上 · Apple Silicon / Intel · MIT 开源</p>
+    <p class="req">macOS 14 及以上 · Apple Silicon / Intel · MIT 开源 · 免费</p>
   </div>
 </header>
 
-<div class="stage wrap">
-  <div class="screen">
-    <div class="menubar">
-      <div class="mb-left">
-        <svg class="apple" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)"><path d="M17.05 12.54c-.03-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.8 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.24 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.38.81 1.4-.02 2.28-1.27 3.13-2.53.99-1.45 1.4-2.85 1.42-2.92-.03-.01-2.72-1.04-2.75-4.13ZM14.62 4.87c.7-.86 1.18-2.05 1.05-3.24-1.05.04-2.32.7-3.05 1.55-.66.76-1.22 1.98-1.07 3.14 1.17.09 2.37-.59 3.07-1.45Z"/></svg>
-        <span>访达</span><span>文件</span><span>编辑</span><span>显示</span>
+<!-- 图一 -->
+<div class="plate">
+  <div class="wrap">
+    <figure>
+      <div class="drawing">
+        <div class="screenline">
+          <div class="menubar">
+            <div class="mb-left">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--ink-soft)"><path d="M17.05 12.54c-.03-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.8 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.24 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.38.81 1.4-.02 2.28-1.27 3.13-2.53.99-1.45 1.4-2.85 1.42-2.92-.03-.01-2.72-1.04-2.75-4.13ZM14.62 4.87c.7-.86 1.18-2.05 1.05-3.24-1.05.04-2.32.7-3.05 1.55-.66.76-1.22 1.98-1.07 3.14 1.17.09 2.37-.59 3.07-1.45Z"/></svg>
+              <span>访达</span><span>文件</span><span>编辑</span><span>显示</span>
+            </div>
+            <div class="notch"></div>
+            <div class="mb-right">
+              <span class="mb-ico hidden"></span>
+              <span class="mb-ico round"></span>
+              <span class="mb-ico"></span>
+              <span class="mb-ico round"></span>
+              <span class="mb-ico batt"></span>
+            </div>
+          </div>
+          <div class="launcher">
+            <span class="pill">港湾<span class="count">3</span></span>
+          </div>
+          <div class="shelf">
+            <div class="shelf-head">
+              <b>HARBOR</b>
+              <span>刘海安全 · 三个溢出图标已收纳</span>
+              <span class="risk-chip">3 只看溢出</span>
+              <span class="search"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg>搜索图标</span>
+            </div>
+            <div class="shelf-grid">
+              <div class="cell first"><div class="ic">W</div><div class="lb">WiFi</div></div>
+              <div class="cell first"><div class="ic">米</div><div class="lb">输入法</div></div>
+              <div class="cell first"><div class="ic">飞</div><div class="lb">飞书</div></div>
+              <div class="cell"><div class="ic">D</div><div class="lb">Dropbox</div></div>
+              <div class="cell"><div class="ic">V</div><div class="lb">VPN</div></div>
+              <div class="cell"><div class="ic">Z</div><div class="lb">Zoom</div></div>
+              <div class="cell"><div class="ic">○</div><div class="lb">日历</div></div>
+            </div>
+            <div class="shelf-foot">
+              <span>← → 选择</span><span>↩ 打开</span>
+              <span class="spacer"></span>
+              <span>esc 关闭</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="notch"></div>
-      <div class="mb-right">
-        <span class="mb-ico hidden-by-notch" title="被刘海挡住"></span>
-        <span class="mb-ico"></span>
-        <span class="mb-ico solid"></span>
-        <span class="mb-ico"></span>
-        <span class="mb-ico battery"></span>
-      </div>
-    </div>
-
-    <div class="launcher"><span class="glyph">▾</span>港湾<span class="count">3</span></div>
-
-    <div class="shelf">
-      <div class="shelf-head">
-        <b>HARBOR</b>
-        <span>刘海安全 · 3 个溢出图标已收纳</span>
-        <span class="risk-chip">⚠ 3 只看溢出</span>
-        <span class="search"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" opacity=".55"><path d="M11.74 10.32a5.5 5.5 0 1 0-1.42 1.42l3.47 3.47a1 1 0 0 0 1.42-1.42l-3.47-3.47ZM7.5 11.5a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/></svg>搜索图标</span>
-      </div>
-      <div class="shelf-grid">
-        <div class="cell first"><div class="ic i3">W<span class="warn">▲</span></div><div class="lb">WiFi</div></div>
-        <div class="cell first"><div class="ic i1">米<span class="warn">▲</span></div><div class="lb">输入法</div></div>
-        <div class="cell first"><div class="ic i2">飞<span class="warn">▲</span></div><div class="lb">飞书</div></div>
-        <div class="cell"><div class="ic i5">D</div><div class="lb">Dropbox</div></div>
-        <div class="cell"><div class="ic i4">V</div><div class="lb">VPN</div></div>
-        <div class="cell"><div class="ic i6">Z</div><div class="lb">Zoom</div></div>
-        <div class="cell"><div class="ic i7">○</div><div class="lb">日历</div></div>
-      </div>
-      <div class="shelf-foot">
-        <span>← → 选择</span><span>↩︎ 打开</span>
-        <span class="spacer"></span>
-        <span>esc 关闭</span>
-      </div>
-    </div>
+      <figcaption><b>图一</b> · 港湾 Shelf：可能被刘海挡住的图标（▲）优先排列；搜索容错，"wfi" 亦能寻得 WiFi</figcaption>
+    </figure>
   </div>
-  <p class="stage-note">示意图：可能被刘海挡住的图标优先排列并带警示标记，搜索支持模糊匹配</p>
 </div>
 
+<!-- 特性 -->
 <section id="features">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>为什么是 MenuHarbor</h2>
-      <p>专注解决一个问题：让每一个菜单栏图标都可达。</p>
+    <div class="rubric">
+      <span class="no">其一</span>
+      <h2>它做什么</h2>
+      <span class="en">FEATURES</span>
     </div>
-    <div class="grid">
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
-        <h3>刘海安全模式</h3>
-        <p>带刘海的屏幕自动启用。扫描当前屏幕的菜单栏图标，集中到刘海下方展示，不需要逐个 ⌘ 拖拽整理。</p>
+    <p class="foreword">不必逐个按住 ⌘ 拖图标，也不必记住哪一项藏到了哪里。MenuHarbor 只专注一件事：让每一个菜单栏图标都可达。以下九则，按使用频度排列。</p>
+    <div class="cols">
+      <div class="entry">
+        <span class="num">一</span>
+        <div>
+          <h3>刘海安全</h3>
+          <p>带刘海的屏幕自动启用。扫描当前屏幕的菜单栏图标，集中到刘海下方展示，无需手动整理。</p>
+        </div>
       </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
-        <h3>固定港湾入口</h3>
-        <p>刘海下方常驻一个不会被挤掉的「港湾」按钮，带溢出计数；主按钮、快捷键、悬停、滚动同样可以打开。</p>
+      <div class="entry">
+        <span class="num">二</span>
+        <div>
+          <h3>固定港湾入口</h3>
+          <p>刘海下方常驻一枚「港湾」按钮，不会被菜单栏挤掉，且带溢出计数；点它即达。</p>
+        </div>
       </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></div>
-        <h3>收纳模式</h3>
-        <p>macOS 26 起系统会回收被折叠的图标（同类产品全部失效）。MenuHarbor 自动检测并转入收纳模式：菜单栏保持原生，港湾照常可用。</p>
+      <div class="entry">
+        <span class="num">三</span>
+        <div>
+          <h3>收纳模式</h3>
+          <p>macOS 26 起系统会回收被折叠的图标，同类产品尽数失效。MenuHarbor 自动转入收纳模式：菜单栏保持原生，港湾照常可用。</p>
+        </div>
       </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div>
-        <h3>容错搜索</h3>
-        <p>大小写、声调符号与全角字符自动折叠——<code>cafe</code> 找到 Café、全角 ｗｉｆｉ 等同 wifi；无精确命中时按字符顺序模糊匹配，<code>wfi</code> 也能找到 WiFi。</p>
+      <div class="entry">
+        <span class="num">四</span>
+        <div>
+          <h3>容错搜索</h3>
+          <p>大小写、声调与全角自动折叠——<code>cafe</code> 寻得 Café，全角 ｗｉｆｉ 等同 wifi；无精确命中时按字序模糊匹配，<code>wfi</code> 亦能寻得 WiFi。</p>
+        </div>
       </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l7 17 2.5-6.5L21 11z"/></svg></div>
-        <h3>可靠代点击</h3>
-        <p>开启辅助功能后，点港湾里的图标会走语义按压（AXPress）直达原生菜单项，比合成坐标点击更可靠；权限不足自动退回手动展开。</p>
+      <div class="entry">
+        <span class="num">五</span>
+        <div>
+          <h3>可靠代点击</h3>
+          <p>开启辅助功能后，点港湾里的图标即走语义按压（AXPress）直达原生菜单项；权限不足时体面退回手动展开。</p>
+        </div>
       </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></div>
-        <h3>三区管理</h3>
-        <p>无刘海屏幕可用经典三区：可见、隐藏（双箭头左侧）、始终隐藏（竖线左侧）。按住 ⌘ 拖拽布置，一次整理长期有效。</p>
+      <div class="entry">
+        <span class="num">六</span>
+        <div>
+          <h3>三区管理</h3>
+          <p>无刘海屏幕可用经典三区：可见、隐藏、始终隐藏。按住 ⌘ 拖拽布置，一次整理，长期有效。</p>
+        </div>
       </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-4 3 8 2-4h6"/></svg></div>
-        <h3>折叠健康自检</h3>
-        <p>收起后自动验证图标真的离开屏幕；系统布局行为变化导致折叠失效时，明确警告并提供一键恢复，不让图标无声丢失。</p>
+      <div class="entry">
+        <span class="num">七</span>
+        <div>
+          <h3>折叠健康自检</h3>
+          <p>收起后自动验证图标真的离开了屏幕；系统行为有变则明确警告，并给出一键恢复，不让图标无声失踪。</p>
+        </div>
       </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6"/></svg></div>
-        <h3>键盘优先</h3>
-        <p>打开即聚焦搜索框，<code>←</code><code>→</code> 选择、<code>↩︎</code> 打开、<code>esc</code> 关闭；快捷键默认 <code>⌃⌥H</code>，可录制任意组合。</p>
+      <div class="entry">
+        <span class="num">八</span>
+        <div>
+          <h3>键盘优先</h3>
+          <p>打开即聚焦搜索，<code>←</code><code>→</code> 选择、<code>↩</code> 打开、<code>esc</code> 关闭；快捷键默认 <code>⌃⌥H</code>，可录制任意组合。</p>
+        </div>
       </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
-        <h3>隐私本地</h3>
-        <p>不联网、无账号、无统计。截图只在内存中短暂处理；所有偏好存在本机 UserDefaults。</p>
+      <div class="entry">
+        <span class="num">九</span>
+        <div>
+          <h3>隐私本地</h3>
+          <p>不联网、无账号、无统计。截图只在内存中短暂处理；全部偏好存于本机。</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- 获取 -->
 <section id="download">
   <div class="wrap">
-    <div class="dl">
-      <h2>下载 MenuHarbor</h2>
-      <p class="sub">当前版本 v0.5.0 · 免费开源（MIT）</p>
-      <a class="btn btn-primary" href="https://github.com/anmutu/menu-harbor/releases/latest" target="_blank" rel="noopener">前往 GitHub Releases</a>
-      <div class="steps">
-        <div class="step">
-          <b><span class="n">1</span>下载解压</b>
-          <p>从 GitHub Releases 下载最新压缩包，解压出 MenuHarbor.app，拖入「应用程序」文件夹。</p>
-        </div>
-        <div class="step">
-          <b><span class="n">2</span>首次打开</b>
-          <p>在访达中<b>右键 → 打开</b>再点「打开」（见下方说明）。首次运行有三步引导。</p>
-        </div>
-        <div class="step">
-          <b><span class="n">3</span>按需授权</b>
-          <p>基础收纳不需要任何权限；开启屏幕录制显示真实图标，开启辅助功能可直接点击。</p>
-        </div>
-      </div>
-      <p class="gatekeeper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19z"/><path d="M12 9v5M12 17h.01"/></svg> MenuHarbor 目前使用临时签名（未购买 Apple Developer ID）。macOS Gatekeeper 可能拦截首次打开：请右键点击应用选「打开」，或到 系统设置 → 隐私与安全性 中点「仍要打开」。也可以 <code style="font-size:11.5px;">make app</code> 从源码自行构建。</p>
+    <div class="rubric">
+      <span class="no">其二</span>
+      <h2>如何得到</h2>
+      <span class="en">DOWNLOAD</span>
     </div>
+    <div class="colophon-lines">
+      <span>版本 <b>v0.5.0</b></span>
+      <span>许可 <b>MIT</b></span>
+      <span>系统 <b>macOS 14+</b></span>
+      <span>架构 <b>Universal</b></span>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="num">第一步</span>
+        <h3>下载解压</h3>
+        <p>自 GitHub Releases 取最新压缩包，解压出 MenuHarbor.app，移入「应用程序」。</p>
+      </div>
+      <div class="step">
+        <span class="num">第二步</span>
+        <h3>首次打开</h3>
+        <p>在访达中对应用<b>右键 → 打开</b>（缘由见下方附注）。首启有三步引导。</p>
+      </div>
+      <div class="step">
+        <span class="num">第三步</span>
+        <h3>按需授权</h3>
+        <p>基础收纳不必授权；屏幕录制显示真实图标，辅助功能用以直接点击。</p>
+      </div>
+    </div>
+    <p class="footnote"><span class="mark">※</span>附注：应用目前使用临时签名（尚未购入 Apple Developer ID），Gatekeeper 或于首次打开时拦问。右键选「打开」，或往 系统设置 → 隐私与安全性 点「仍要打开」即可；亦可克隆仓库以 <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px;">make app</span> 自行构建。下载地址：<a href="https://github.com/anmutu/menu-harbor/releases/latest" target="_blank" rel="noopener" style="color:var(--teal);">GitHub Releases ↗</a></p>
   </div>
 </section>
 
+<!-- 隐私 -->
 <section id="privacy">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>权限与隐私</h2>
-      <p>基础功能免授权。两项可选权限都在本机使用。</p>
+    <div class="rubric">
+      <span class="no">其三</span>
+      <h2>两个可选的权限</h2>
+      <span class="en">PRIVACY</span>
     </div>
     <div class="perm">
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="m16 10 5-2.5v9L16 14"/></svg></div>
+      <div class="entry">
         <div>
-          <h3>屏幕录制（可选）</h3>
+          <h3>屏幕录制 <small>可选</small></h3>
           <p>截取菜单栏图标本身，在港湾里显示真实外观。图像只在内存中短暂处理，不写盘、不上传。</p>
         </div>
       </div>
-      <div class="card">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.5"/><path d="M4 9h16M12 9v6l-3 6M12 15l3 6"/></svg></div>
+      <div class="entry">
         <div>
-          <h3>辅助功能（可选）</h3>
-          <p>读取图标的公开名称（否则 macOS 26 下只显示 Item-0），并代你对原图标执行一次语义按压。</p>
+          <h3>辅助功能 <small>可选</small></h3>
+          <p>读取图标的公开名称（否则 macOS 26 下只见 Item-0），并代你对原图标执行一次语义按压。</p>
         </div>
       </div>
     </div>
-    <p class="privacy-line">不联网 · 无账号 · 无统计 · 详细说明见仓库 <a href="https://github.com/anmutu/menu-harbor/blob/main/docs/privacy.md" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:none;">privacy.md</a></p>
+    <p class="privacy-line">不联网 · 无账号 · 无统计 —— 详细说明见仓库 <a href="https://github.com/anmutu/menu-harbor/blob/main/docs/privacy.md" target="_blank" rel="noopener">privacy.md ↗</a></p>
   </div>
 </section>
 
+<!-- 版权页 -->
 <footer>
   <div class="wrap">
     <span>© 2026 anmutu</span>
-    <span><a href="https://github.com/anmutu/menu-harbor/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></span>
+    <span><a href="https://github.com/anmutu/menu-harbor/blob/main/LICENSE" target="_blank" rel="noopener">MIT License ↗</a></span>
     <span class="spacer"></span>
-    <span><a href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">GitHub</a></span>
-    <span><a href="https://github.com/anmutu/menu-harbor/releases" target="_blank" rel="noopener">Releases</a></span>
+    <span><a href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">GitHub ↗</a></span>
+    <span><a href="https://github.com/anmutu/menu-harbor/releases" target="_blank" rel="noopener">Releases ↗</a></span>
+    <span class="note">本页为单文件 HTML，不引任何第三方资源；源文件随仓库同行，由 GitHub Pages 刊发。</span>
   </div>
 </footer>
 
