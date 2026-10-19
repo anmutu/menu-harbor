@@ -232,6 +232,28 @@
     padding: 1px 5px; border-radius: 5px;
   }
 
+  /* ---------- 故事 ---------- */
+  .story { padding: 84px 0 6px; }
+  .story-quote {
+    font-family: var(--serif); font-weight: 500;
+    font-size: clamp(26px, 3.8vw, 38px); line-height: 1.32; letter-spacing: -0.01em;
+    text-align: center; max-width: 660px; margin: 0 auto 8px;
+  }
+  .story-quote em { font-style: normal; color: var(--coral); }
+  .story-sub { text-align: center; color: var(--ink-faint); font-size: 13px; margin-top: 10px; }
+  .story-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 44px; }
+  @media (max-width: 800px) { .story-grid { grid-template-columns: 1fr; } }
+  .story-card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 18px; padding: 24px 24px 22px;
+  }
+  .story-card .no {
+    font-family: var(--serif); font-style: italic;
+    font-size: 14px; color: var(--coral); margin-bottom: 10px; display: block;
+  }
+  .story-card h3 { font-family: var(--serif); font-weight: 600; font-size: 18px; margin-bottom: 8px; }
+  .story-card p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.85; }
+
   /* ---------- 下载 ---------- */
   .dl-band {
     background: var(--cream-deep);
@@ -304,6 +326,7 @@
       MenuHarbor
     </a>
     <div class="links">
+      <a href="#story">故事</a>
       <a href="#features">特性</a>
       <a href="#download">下载</a>
       <a href="#privacy">隐私</a>
@@ -377,6 +400,30 @@
     <p class="stage-note">可能被刘海挡住的图标（▲）优先排列 · 搜索容错，"wfi" 也能找到 WiFi</p>
   </div>
 </div>
+
+<section class="story" id="story">
+  <div class="wrap">
+    <p class="story-quote">每一个用 MacBook 的人，<br>都有几个<em>再也点不到</em>的图标。</p>
+    <p class="story-sub">MenuHarbor 的由来，要从三件小事说起。</p>
+    <div class="story-grid">
+      <div class="story-card">
+        <span class="no">i.</span>
+        <h3>消失</h3>
+        <p>图标失踪的过程悄无声息：装一个新 App，它的图标在菜单栏右侧出现；再装一个，它往左挪了挪。某天你想起去找它时，它已经在刘海后面——系统还记得它，你却再也点不到。</p>
+      </div>
+      <div class="story-card">
+        <span class="no">ii.</span>
+        <h3>挣扎</h3>
+        <p>老办法是按住 ⌘，把不常用的图标一个个拖到分隔线左边藏起来。macOS 26 到来后，系统开始回收被折叠的图标——这个玩法，连同一批老牌菜单栏工具一起失效了。</p>
+      </div>
+      <div class="story-card">
+        <span class="no">iii.</span>
+        <h3>停靠</h3>
+        <p>MenuHarbor 换了个思路：不与系统较劲，在刘海下方修一座港湾。被挤掉的图标自动停靠，能看、能搜、能直接点；原生菜单栏保持原样，不动声色。</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section id="features">
   <div class="wrap">
