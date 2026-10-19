@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://anmutu.github.io/menu-harbor/sitemap.xml

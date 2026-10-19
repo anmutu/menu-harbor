@@ -3,8 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MenuHarbor — 刘海挡不住的菜单栏</title>
-<meta name="description" content="MenuHarbor 是原生 macOS 菜单栏溢出层：刘海挡住的图标自动集中到刘海下方的港湾，能看、能搜、能直接点。不联网、不上传、本地运行。">
+<title>MenuHarbor — macOS 菜单栏管理工具：刘海挡住的图标，停进港湾</title>
+<meta name="description" content="开源免费的 macOS 菜单栏管理工具。刘海挡住的图标自动收进刘海下方的港湾：能看、能搜、能直接点。Bartender / Ice 的免费开源替代，兼容 macOS 26 收纳模式。不联网、不上传、本地运行。">
+<meta name="keywords" content="macOS 菜单栏,菜单栏管理,刘海图标,菜单栏溢出,Bartender 替代,Ice 替代,开源菜单栏工具,macOS 26 菜单栏">
+<link rel="canonical" href="https://anmutu.github.io/menu-harbor/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MenuHarbor">
+<meta property="og:title" content="MenuHarbor — 刘海挡不住的 macOS 菜单栏港湾">
+<meta property="og:description" content="刘海挡住的图标自动收进港湾：能看、能搜、能直接点。开源免费，兼容 macOS 26。">
+<meta property="og:url" content="https://anmutu.github.io/menu-harbor/">
+<meta property="og:image" content="https://anmutu.github.io/menu-harbor/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MenuHarbor — 刘海挡不住的 macOS 菜单栏港湾">
+<meta name="twitter:description" content="刘海挡住的图标自动收进港湾：能看、能搜、能直接点。开源免费，兼容 macOS 26。">
+<meta name="twitter:image" content="https://anmutu.github.io/menu-harbor/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "MenuHarbor",
+  "alternateName": "菜单栏港湾",
+  "operatingSystem": "macOS 14+",
+  "applicationCategory": "UtilitiesApplication",
+  "description": "原生 macOS 菜单栏溢出层：刘海挡住的图标自动收进刘海下方的港湾，能看、能搜、能直接点；兼容 macOS 26 收纳模式。",
+  "url": "https://anmutu.github.io/menu-harbor/",
+  "downloadUrl": "https://github.com/anmutu/menu-harbor/releases/latest",
+  "codeRepository": "https://github.com/anmutu/menu-harbor",
+  "softwareVersion": "0.5.0",
+  "license": "https://opensource.org/licenses/MIT",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "anmutu" },
+  "inLanguage": "zh-CN"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "macOS 26 菜单栏图标被系统回收、折叠工具失效怎么办？",
+      "acceptedAnswer": { "@type": "Answer", "text": "macOS 26 起系统会回收被折叠的菜单栏图标，Bartender、Ice、Hidden Bar 的折叠玩法都会失效。MenuHarbor 内置折叠健康自检，检测到该行为后自动转入收纳模式：菜单栏保持原生布局，港湾照常展示、搜索并代为点击全部图标。" }
+    },
+    {
+      "@type": "Question",
+      "name": "有 Bartender、Ice 的免费开源替代吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "MenuHarbor 是开源（MIT）、免费、无订阅的 macOS 菜单栏管理工具：刘海安全模式、容错搜索、代点击、三区管理一应俱全，可从 GitHub Releases 下载通用二进制（Apple Silicon 与 Intel）。" }
+    },
+    {
+      "@type": "Question",
+      "name": "刘海挡住了菜单栏图标，怎么找回来？",
+      "acceptedAnswer": { "@type": "Answer", "text": "在带刘海的 Mac 上，MenuHarbor 自动进入刘海安全模式：被挡住的图标收进刘海下方的港湾 Shelf，优先排列并带警示标记，支持搜索和直接点击；刘海下方还有常驻的港湾入口按钮。" }
+    },
+    {
+      "@type": "Question",
+      "name": "MenuHarbor 会上传数据吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "不会。MenuHarbor 不联网、无账号、无统计；截图只在内存中短暂处理，偏好只存本机 UserDefaults。屏幕录制与辅助功能两项权限均为可选，全部在本机使用。" }
+    }
+  ]
+}
+</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FAF9F5'/%3E%3Cg stroke='%23D97757' stroke-width='5' stroke-linecap='round'%3E%3Cpath d='M32 14v36M14 32h36M19 19l26 26M45 19 19 45'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   :root {
@@ -307,6 +369,15 @@
   .privacy-line a { color: var(--coral-deep); border-bottom: 1px solid rgba(217,119,87,0.35); }
   .privacy-line a:hover { color: var(--coral); border-bottom-color: var(--coral); }
 
+  /* ---------- FAQ ---------- */
+  .faq-list { max-width: 720px; margin: 0 auto; }
+  .faq-item { border-bottom: 1px solid var(--line-soft); padding: 22px 4px; }
+  .faq-item h3 {
+    font-family: var(--serif); font-weight: 600; font-size: 17.5px;
+    margin-bottom: 8px; letter-spacing: 0.01em;
+  }
+  .faq-item p { font-size: 14px; color: var(--ink-soft); line-height: 1.8; }
+
   footer { margin-top: 96px; border-top: 1px solid var(--line-soft); padding: 28px 0 40px; }
   footer .wrap {
     display: flex; align-items: center; gap: 20px;
@@ -330,6 +401,7 @@
       <a href="#features">特性</a>
       <a href="#download">下载</a>
       <a href="#privacy">隐私</a>
+      <a href="#faq">问答</a>
       <a href="https://github.com/anmutu/menu-harbor" target="_blank" rel="noopener">GitHub</a>
       <a class="nav-cta" href="https://github.com/anmutu/menu-harbor/releases/latest" target="_blank" rel="noopener">下载</a>
     </div>
@@ -553,6 +625,36 @@
       </div>
     </div>
     <p class="privacy-line">不联网 · 无账号 · 无统计 —— 详细说明见仓库 <a href="https://github.com/anmutu/menu-harbor/blob/main/docs/privacy.md" target="_blank" rel="noopener">privacy.md</a></p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
+        常见问题
+      </div>
+      <h2>你可能想问</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <h3>macOS 26 菜单栏图标被系统回收、折叠工具失效怎么办？</h3>
+        <p>macOS 26 起系统会回收被折叠的菜单栏图标，Bartender、Ice、Hidden Bar 的折叠玩法都会失效。MenuHarbor 内置折叠健康自检，检测到该行为后自动转入<b>收纳模式</b>：菜单栏保持原生布局，港湾照常展示、搜索并代为点击全部图标。</p>
+      </div>
+      <div class="faq-item">
+        <h3>有 Bartender、Ice 的免费开源替代吗？</h3>
+        <p>MenuHarbor 开源（MIT）、免费、无订阅：刘海安全模式、容错搜索、代点击、三区管理一应俱全。从 GitHub Releases 下载通用包即可，Apple Silicon 与 Intel 都能跑。</p>
+      </div>
+      <div class="faq-item">
+        <h3>刘海挡住了菜单栏图标，怎么找回来？</h3>
+        <p>在带刘海的 Mac 上 MenuHarbor 自动进入刘海安全模式：被挡住的图标收进刘海下方的港湾 Shelf，优先排列并带警示标记，支持搜索和直接点击；刘海下方还有常驻的「港湾」入口按钮，不会被挤掉。</p>
+      </div>
+      <div class="faq-item">
+        <h3>MenuHarbor 会上传数据吗？</h3>
+        <p>不会。不联网、无账号、无统计；截图只在内存中短暂处理，偏好只存本机。屏幕录制与辅助功能两项权限均为可选，拒绝授权不影响基础收纳。</p>
+      </div>
+    </div>
   </div>
 </section>
 
