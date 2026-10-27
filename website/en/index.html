@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MenuHarbor — Free Open-Source Mac Menu Bar Manager (Notch-Safe)</title>
+<meta name="description" content="Free, open-source macOS menu bar manager. Icons hidden behind the notch dock into a harbor right below it — view, search, and click them. A free Bartender / Ice alternative that keeps working on macOS 26. No network, no accounts, fully local.">
+<meta name="keywords" content="mac menu bar manager, menu bar organizer, notch hides icons, bartender alternative, ice alternative, free menu bar app, open source macos app, macOS 26 menu bar">
+<link rel="canonical" href="https://anmutu.github.io/menu-harbor/en/">
+<link rel="alternate" hreflang="zh-CN" href="https://anmutu.github.io/menu-harbor/">
+<link rel="alternate" hreflang="en" href="https://anmutu.github.io/menu-harbor/en/">
+<link rel="alternate" hreflang="x-default" href="https://anmutu.github.io/menu-harbor/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MenuHarbor">
+<meta property="og:title" content="MenuHarbor — a harbor for menu bar icons the notch can't hide">
+<meta property="og:description" content="Notch-hidden icons dock into a harbor below it: view, search, click. Free, open source, macOS 26 ready.">
+<meta property="og:url" content="https://anmutu.github.io/menu-harbor/en/">
+<meta property="og:image" content="https://anmutu.github.io/menu-harbor/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MenuHarbor — a harbor for menu bar icons the notch can't hide">
+<meta name="twitter:description" content="Notch-hidden icons dock into a harbor below it: view, search, click. Free, open source, macOS 26 ready.">
+<meta name="twitter:image" content="https://anmutu.github.io/menu-harbor/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "MenuHarbor",
+  "alternateName": "Menu Bar Harbor",
+  "operatingSystem": "macOS 14+",
+  "applicationCategory": "UtilitiesApplication",
+  "description": "A native macOS menu bar overlay: icons hidden behind the notch dock into a harbor right below it — visible, searchable, and clickable; macOS 26 collect mode supported.",
+  "url": "https://anmutu.github.io/menu-harbor/en/",
+  "downloadUrl": "https://github.com/anmutu/menu-harbor/releases/latest",
+  "codeRepository": "https://github.com/anmutu/menu-harbor",
+  "softwareVersion": "0.5.0",
+  "license": "https://opensource.org/licenses/MIT",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "anmutu" },
+  "inLanguage": "en"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "macOS 26 reclaims folded menu bar icons and breaks folding tools — what then?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Starting with macOS 26 the system reclaims folded menu bar icons, which breaks the folding approach used by Bartender, Ice and Hidden Bar. MenuHarbor ships with a fold health check; when it detects this behavior it automatically switches to collect mode: the menu bar keeps its native layout while the harbor continues to show, search, and click every icon." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a free, open-source alternative to Bartender and Ice?",
+      "acceptedAnswer": { "@type": "Answer", "text": "MenuHarbor is open source (MIT), free, and subscription-free: notch-safe mode, forgiving search, click-through, and three-zone management in one package. Grab the universal build from GitHub Releases — it runs on both Apple Silicon and Intel." }
+    },
+    {
+      "@type": "Question",
+      "name": "The notch is hiding my menu bar icons — how do I get them back?",
+      "acceptedAnswer": { "@type": "Answer", "text": "On a notched Mac, MenuHarbor automatically enters notch-safe mode: hidden icons dock into the harbor Shelf below the notch, sorted first and flagged with a warning mark, searchable and directly clickable. A permanent harbor button sits just below the notch, so the entry point can never be pushed away." }
+    },
+    {
+      "@type": "Question",
+      "name": "Does MenuHarbor upload any data?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. MenuHarbor makes no network connections, has no accounts and no analytics; screenshots are processed briefly in memory and preferences stay on your Mac. The Screen Recording and Accessibility permissions are both optional and used entirely on-device." }
+    }
+  ]
+}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FAF9F5'/%3E%3Cg stroke='%23D97757' stroke-width='5' stroke-linecap='round'%3E%3Cpath d='M32 14v36M14 32h36M19 19l26 26M45 19 19 45'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  :root {
+    --cream: #FAF9F5;
+    --cream-deep: #F0EEE6;
+    --card: #FFFFFF;
+    --ink: #191919;
+    --ink-soft: #514F4B;
+    --ink-faint: #8A877F;
+    --line: rgba(25, 25, 25, 0.10);
+    --line-soft: rgba(25, 25, 25, 0.06);
+    --coral: #D97757;
+    --coral-deep: #BC5B3C;
+    --coral-wash: rgba(217, 119, 87, 0.10);
+    --teal: #0F766E;
+    --serif: Georgia, "Songti SC", "Noto Serif SC", "Source Han Serif SC", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 0 28px; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--coral-wash); }
+
+  .asterisk { color: var(--coral); flex-shrink: 0; }
+
+  /* ---------- 导航 ---------- */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(250, 249, 245, 0.86);
+    backdrop-filter: saturate(1.3) blur(12px);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  nav .wrap { display: flex; align-items: center; gap: 12px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 9px; font-family: var(--serif); font-size: 18px; letter-spacing: 0.01em; }
+  nav .links { margin-left: auto; display: flex; align-items: center; gap: 26px; font-size: 14px; color: var(--ink-soft); }
+  nav .links a:hover { color: var(--ink); }
+  nav .links a.accent { color: var(--coral-deep); }
+  nav .links a.accent:hover { color: var(--coral); }
+  .nav-cta {
+    background: var(--ink); color: var(--cream);
+    font-size: 13px; padding: 7px 16px; border-radius: 999px;
+    transition: background .15s ease;
+  }
+  .nav-cta:hover { background: var(--coral-deep); color: #fff; }
+
+  /* ---------- Hero ---------- */
+  header { text-align: center; padding: 92px 0 30px; position: relative; overflow: hidden; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(42px, 6.2vw, 66px);
+    line-height: 1.14; letter-spacing: -0.01em;
+    font-weight: 500;
+    margin-top: 22px;
+  }
+  h1 em { font-style: normal; color: var(--coral); }
+  .sub {
+    max-width: 600px; margin: 22px auto 0;
+    color: var(--ink-soft); font-size: 17px; line-height: 1.75;
+  }
+  .cta-row { display: flex; justify-content: center; gap: 14px; margin-top: 34px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 13px 28px; border-radius: 999px;
+    font-size: 15px; font-weight: 600;
+    transition: transform .12s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-ink { background: var(--ink); color: var(--cream); box-shadow: 0 10px 24px -12px rgba(25,25,25,0.5); }
+  .btn-ink:hover { background: var(--coral-deep); }
+  .btn-ghost { border: 1px solid var(--line); color: var(--ink); background: var(--card); }
+  .btn-ghost:hover { border-color: var(--coral); color: var(--coral-deep); }
+  .req { margin-top: 18px; font-size: 13px; color: var(--ink-faint); }
+
+  /* ---------- 产品图 ---------- */
+  .stage { padding: 52px 0 10px; position: relative; }
+  .stage::before {
+    content: ""; position: absolute; left: 50%; bottom: -60px;
+    transform: translateX(-50%);
+    width: 720px; height: 340px; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(217,119,87,0.16), transparent 70%);
+    pointer-events: none;
+  }
+  .frame {
+    max-width: 780px; margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    box-shadow:
+      0 1px 2px rgba(25,25,25,0.04),
+      0 24px 64px -32px rgba(25,25,25,0.28);
+    overflow: hidden;
+    position: relative;
+  }
+  .menubar {
+    position: relative; height: 34px;
+    display: flex; align-items: center;
+    background: #211F1D;
+    font-size: 11.5px; color: rgba(250,249,245,0.85);
+  }
+  .mb-left { display: flex; gap: 14px; padding-left: 15px; align-items: center; white-space: nowrap; }
+  .mb-left svg { display: block; }
+  .notch {
+    position: absolute; left: 50%; transform: translateX(-50%); top: 0;
+    width: 112px; height: 20px; background: #0E0D0C;
+    border-radius: 0 0 10px 10px;
+  }
+  .mb-right { margin-left: auto; display: flex; gap: 12px; padding-right: 14px; align-items: center; }
+  .mb-ico { width: 13px; height: 13px; border-radius: 3.5px; background: rgba(250,249,245,0.34); }
+  .mb-ico.round { border-radius: 50%; }
+  .mb-ico.batt { border-radius: 2px; position: relative; }
+  .mb-ico.batt::after { content: ""; position: absolute; inset: 2px 5px 2px 2px; background: rgba(250,249,245,0.7); }
+  .mb-ico.hidden {
+    background:
+      repeating-linear-gradient(-45deg, rgba(217,119,87,0.85) 0 3px, rgba(217,119,87,0.30) 3px 6px);
+  }
+  .app-area { padding: 14px 20px 20px; background: linear-gradient(180deg, #FDFCF9, #F7F5EF); }
+  .launcher { display: flex; justify-content: center; }
+  .launcher .pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 28px; padding: 0 15px;
+    background: var(--teal); color: #FDFCF9;
+    border-radius: 999px; font-size: 12px; letter-spacing: 0.12em;
+    box-shadow: 0 6px 16px -6px rgba(15,118,110,0.55);
+  }
+  .launcher .pill .count {
+    background: #FDFCF9; color: var(--teal);
+    font-size: 10.5px; font-weight: 700;
+    padding: 0 6.5px; border-radius: 999px; line-height: 17px;
+  }
+  .shelf {
+    width: min(560px, 94%);
+    margin: 18px auto 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 10px 28px -18px rgba(25,25,25,0.25);
+    overflow: hidden;
+  }
+  .shelf-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; border-bottom: 1px solid var(--line-soft);
+    font-size: 11.5px; color: var(--ink-faint);
+  }
+  .shelf-head b { font-size: 11px; letter-spacing: 0.2em; color: var(--ink); }
+  .risk-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--coral-wash); color: var(--coral-deep);
+    font-weight: 700; font-size: 11px;
+    padding: 2.5px 10px; border-radius: 999px;
+  }
+  .search {
+    margin-left: auto; display: flex; align-items: center; gap: 6px;
+    background: var(--cream); border: 1px solid var(--line-soft);
+    border-radius: 8px; padding: 4px 10px;
+    font-size: 11px; color: var(--ink-faint); min-width: 118px;
+  }
+  .shelf-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 14px 12px; }
+  .cell { text-align: center; padding: 6px 2px; border-radius: 10px; }
+  .cell.first { background: var(--coral-wash); }
+  .cell .ic {
+    width: 27px; height: 27px; margin: 0 auto 6px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; position: relative; color: #FDFCF9;
+  }
+  .cell.first .ic { outline: 1.5px solid var(--coral); }
+  .cell .ic .warn { position: absolute; top: -5px; right: -6px; color: var(--coral); font-size: 9px; font-weight: 900; }
+  .cell .lb { font-size: 10px; color: var(--ink-faint); white-space: nowrap; }
+  .i1 { background: #3B82F6; } .i2 { background: #8B5CF6; } .i3 { background: #10B981; }
+  .i4 { background: #EC4899; } .i5 { background: #F59E0B; } .i6 { background: #0EA5E9; } .i7 { background: #64748B; }
+  .shelf-foot {
+    display: flex; gap: 14px; padding: 7px 14px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 9.5px; color: var(--ink-faint);
+  }
+  .shelf-foot .spacer { margin-left: auto; }
+  .stage-note { text-align: center; margin-top: 16px; font-size: 12.5px; color: var(--ink-faint); }
+
+  /* ---------- 章节 ---------- */
+  section { padding: 84px 0 10px; }
+  .sec-head { text-align: center; max-width: 560px; margin: 0 auto 40px; }
+  .sec-head .eyebrow { color: var(--coral-deep); }
+  .sec-head h2 {
+    font-family: var(--serif); font-weight: 500;
+    font-size: clamp(28px, 4vw, 40px); line-height: 1.2; letter-spacing: -0.01em;
+    margin-top: 14px;
+  }
+  .sec-head p { color: var(--ink-soft); margin-top: 14px; font-size: 15.5px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 800px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 22px 20px;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .card:hover { border-color: rgba(217,119,87,0.45); transform: translateY(-2px); }
+  .card .ic {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--coral-wash); color: var(--coral-deep);
+    margin-bottom: 14px;
+  }
+  .card .ic svg { width: 17px; height: 17px; }
+  .card h3 { font-family: var(--serif); font-weight: 600; font-size: 17px; margin-bottom: 7px; }
+  .card p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.75; }
+  .card code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11.5px; background: var(--cream-deep);
+    padding: 1px 5px; border-radius: 5px;
+  }
+
+  /* ---------- 故事 ---------- */
+  .story { padding: 84px 0 6px; }
+  .story-quote {
+    font-family: var(--serif); font-weight: 500;
+    font-size: clamp(26px, 3.8vw, 38px); line-height: 1.32; letter-spacing: -0.01em;
+    text-align: center; max-width: 660px; margin: 0 auto 8px;
+  }
+  .story-quote em { font-style: normal; color: var(--coral); }
+  .story-sub { text-align: center; color: var(--ink-faint); font-size: 13px; margin-top: 10px; }
+  .story-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 44px; }
+  @media (max-width: 800px) { .story-grid { grid-template-columns: 1fr; } }
+  .story-card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 18px; padding: 24px 24px 22px;
+  }
+  .story-card .no {
+    font-family: var(--serif); font-style: italic;
+    font-size: 14px; color: var(--coral); margin-bottom: 10px; display: block;
+  }
+  .story-card h3 { font-family: var(--serif); font-weight: 600; font-size: 18px; margin-bottom: 8px; }
+  .story-card p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.85; }
+
+  /* ---------- 下载 ---------- */
+  .dl-band {
+    background: var(--cream-deep);
+    border-radius: 26px;
+    padding: 52px 34px 44px;
+    text-align: center;
+  }
+  .dl-meta {
+    display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+    margin: 20px 0 30px;
+  }
+  .dl-meta span {
+    font-size: 12.5px; color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px; padding: 5px 14px;
+  }
+  .dl-meta b { color: var(--ink); font-weight: 600; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; text-align: left; }
+  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } }
+  .step {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px; padding: 20px;
+  }
+  .step .n {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--ink); color: var(--cream);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; margin-bottom: 12px;
+  }
+  .step h3 { font-family: var(--serif); font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .step p { font-size: 13px; color: var(--ink-soft); }
+  .gatekeeper {
+    margin: 26px auto 0; max-width: 620px;
+    display: flex; gap: 10px; align-items: flex-start; text-align: left;
+    background: var(--coral-wash);
+    border: 1px solid rgba(217,119,87,0.25);
+    border-radius: 14px; padding: 14px 18px;
+    font-size: 12.5px; color: var(--ink-soft); line-height: 1.7;
+  }
+  .gatekeeper svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; color: var(--coral-deep); }
+  .gatekeeper code { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; }
+
+  /* ---------- 隐私 ---------- */
+  .perm { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .perm { grid-template-columns: 1fr; } }
+  .perm .card { display: flex; gap: 16px; align-items: flex-start; }
+  .perm .card .ic { margin-bottom: 0; flex-shrink: 0; }
+  .privacy-line { text-align: center; color: var(--ink-soft); font-size: 13.5px; margin-top: 18px; }
+  .privacy-line a { color: var(--coral-deep); border-bottom: 1px solid rgba(217,119,87,0.35); }
+  .privacy-line a:hover { color: var(--coral); border-bottom-color: var(--coral); }
+
+  /* ---------- FAQ ---------- */
+  .faq-list { max-width: 720px; margin: 0 auto; }
+  .faq-item { border-bottom: 1px solid var(--line-soft); padding: 22px 4px; }
+  .faq-item h3 {
+    font-family: var(--serif); font-weight: 600; font-size: 17.5px;
+    margin-bottom: 8px; letter-spacing: 0.01em;
+  }
+  .faq-item p { font-size: 14px; color: var(--ink-soft); line-height: 1.8; }
+
+  footer { margin-top: 96px; border-top: 1px solid var(--line-soft); padding: 28px 0 40px; }
+  footer .wrap {
+    display: flex; align-items: center; gap: 20px;
+    font-size: 13px; color: var(--ink-faint); flex-wrap: wrap;
+  }
+  footer a:hover { color: var(--coral-deep); }
+  footer .spacer { margin-left: auto; }
+  footer .note { width: 100%; font-size: 12px; opacity: 0.8; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><svg class="asterisk" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
+      MenuHarbor
+    </a>
+    <div class="links">
+      <a href="#story">Story</a>
+      <a href="#features">Features</a>
+      <a href="#download">Download</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+      <a href="../" lang="zh-CN">中文</a>
+      <a href="https://github.com/anmutu/menu-harbor target="_blank" rel="noopener"">GitHub</a>
+      <a class="nav-cta" href="https://github.com/anmutu/menu-harbor/releases/latest target="_blank" rel="noopener"">Get the app</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
+      Native macOS · Runs locally · Free &amp; open source
+    </div>
+    <h1>A harbor for icons<br><em>the notch can't hide</em></h1>
+    <p class="sub">Squeezed out by the notch, or folded away by macOS 26? MenuHarbor docks those icons in a harbor right below the notch — visible, searchable, and clickable — while your native menu bar stays untouched.</p>
+    <div class="cta-row">
+      <a class="btn btn-ink" href="https://github.com/anmutu/menu-harbor/releases/latest target="_blank" rel="noopener"">Download MenuHarbor</a>
+      <a class="btn btn-ghost" href="https://github.com/anmutu/menu-harbor target="_blank" rel="noopener"">View the source</a>
+    </div>
+    <p class="req">macOS 14 or later · Apple Silicon / Intel · MIT open source</p>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="wrap">
+    <div class="frame">
+      <div class="menubar">
+        <div class="mb-left">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(250,249,245,0.85)"><path d="M17.05 12.54c-.03-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.8 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.24 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.38.81 1.4-.02 2.28-1.27 3.13-2.53.99-1.45 1.4-2.85 1.42-2.92-.03-.01-2.72-1.04-2.75-4.13ZM14.62 4.87c.7-.86 1.18-2.05 1.05-3.24-1.05.04-2.32.7-3.05 1.55-.66.76-1.22 1.98-1.07 3.14 1.17.09 2.37-.59 3.07-1.45Z"/></svg>
+          <span>Finder</span><span>File</span><span>Edit</span><span>View</span>
+        </div>
+        <div class="notch"></div>
+        <div class="mb-right">
+          <span class="mb-ico hidden"></span>
+          <span class="mb-ico round"></span>
+          <span class="mb-ico"></span>
+          <span class="mb-ico round"></span>
+          <span class="mb-ico batt"></span>
+        </div>
+      </div>
+      <div class="app-area">
+        <div class="launcher">
+          <span class="pill">Harbor<span class="count">3</span></span>
+        </div>
+        <div class="shelf">
+          <div class="shelf-head">
+            <b>HARBOR</b>
+            <span>Notch-safe · 3 overflow icons docked</span>
+            <span class="risk-chip">▲ 3 Overflow only</span>
+            <span class="search"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg>Search icons</span>
+          </div>
+          <div class="shelf-grid">
+            <div class="cell first"><div class="ic i3">W<span class="warn">▲</span></div><div class="lb">WiFi</div></div>
+            <div class="cell first"><div class="ic i1">A<span class="warn">▲</span></div><div class="lb">Input</div></div>
+            <div class="cell first"><div class="ic i2">L<span class="warn">▲</span></div><div class="lb">Lark</div></div>
+            <div class="cell"><div class="ic i5">D</div><div class="lb">Dropbox</div></div>
+            <div class="cell"><div class="ic i4">V</div><div class="lb">VPN</div></div>
+            <div class="cell"><div class="ic i6">Z</div><div class="lb">Zoom</div></div>
+            <div class="cell"><div class="ic i7">○</div><div class="lb">Calendar</div></div>
+          </div>
+          <div class="shelf-foot">
+            <span>← → Select</span><span>↩ Open</span>
+            <span class="spacer"></span>
+            <span>esc Close</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="stage-note">Icons the notch might block (▲) come first · Forgiving search — "wfi" still finds WiFi</p>
+  </div>
+</div>
+
+<section class="story" id="story">
+  <div class="wrap">
+    <p class="story-quote">Every MacBook owner has a few icons<br>they can <em>never click again</em>.</p>
+    <p class="story-sub">MenuHarbor started with three small things.</p>
+    <div class="story-grid">
+      <div class="story-card">
+        <span class="no">i.</span>
+        <h3>Vanish</h3>
+        <p>Icons disappear quietly. Install a new app and its icon appears on the right of the menu bar; install another and everything shuffles left. One day you go looking for it — it's behind the notch. The system still knows it's there; you just can't click it anymore.</p>
+      </div>
+      <div class="story-card">
+        <span class="no">ii.</span>
+        <h3>Struggle</h3>
+        <p>The old fix was to hold ⌘ and drag rarely-used icons past a separator. Then macOS 26 arrived and the system began reclaiming folded icons — breaking that trick, and a generation of menu bar tools with it.</p>
+      </div>
+      <div class="story-card">
+        <span class="no">iii.</span>
+        <h3>Dock</h3>
+        <p>MenuHarbor took another path: don't fight the system — build a harbor below the notch. Displaced icons dock there automatically: visible, searchable, clickable. The native menu bar stays exactly as it was.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
+        What it does
+      </div>
+      <h2>Every icon, back within reach</h2>
+      <p>No ⌘-dragging icons one by one, no remembering where things went.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <h3>Notch-safe</h3>
+        <p>Engages automatically on notched screens: menu bar icons are scanned and gathered right below the notch. No manual sorting required.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+        <h3>Fixed harbor entry</h3>
+        <p>A "Harbor" button lives just below the notch and can't be pushed off the bar, with a live overflow count. One click opens the shelf.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></div>
+        <h3>Collect mode</h3>
+        <p>macOS 26 reclaims folded icons, which breaks classic folding tools. MenuHarbor switches automatically: the menu bar stays native and the harbor keeps working.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div>
+        <h3>Forgiving search</h3>
+        <p>Case, accents and full-width characters fold automatically — <code>cafe</code> finds Café; with no exact match, fuzzy matching kicks in, so <code>wfi</code> still finds WiFi.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l7 17 2.5-6.5L21 11z"/></svg></div>
+        <h3>Reliable click-through</h3>
+        <p>With Accessibility enabled, clicking an icon in the harbor issues a semantic press (AXPress) on the original item; without it, MenuHarbor falls back gracefully to expanding the menu bar.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></div>
+        <h3>Three-zone layout</h3>
+        <p>On notch-free screens use the classic three zones: visible, hidden, always hidden. Arrange once with ⌘-drag and it sticks.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-4 3 8 2-4h6"/></svg></div>
+        <h3>Fold health check</h3>
+        <p>After collapsing, MenuHarbor verifies the icons really left the screen; if system behavior changes, it warns you and offers one-click restore.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6"/></svg></div>
+        <h3>Keyboard first</h3>
+        <p>Search is focused on open: <code>←</code><code>→</code> to select, <code>↩</code> to open, <code>esc</code> to close. Default shortcut <code>⌃⌥H</code>; record any combination.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>Private by design</h3>
+        <p>No network, no accounts, no analytics. Snapshots live only in memory; every preference stays on your Mac.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <div class="dl-band">
+      <div class="sec-head" style="margin-bottom:0;">
+        <div class="eyebrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
+          Get started
+        </div>
+        <h2>Dock your icons in three steps</h2>
+      </div>
+      <div class="dl-meta">
+        <span>Version <b>v0.5.0</b></span>
+        <span>License <b>MIT</b></span>
+        <span>Requires <b>macOS 14+</b></span>
+        <span>Architecture <b>Universal</b></span>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="n">1</span>
+          <h3>Download &amp; unzip</h3>
+          <p>Grab the latest archive from GitHub Releases, unzip MenuHarbor.app, and drop it into Applications.</p>
+        </div>
+        <div class="step">
+          <span class="n">2</span>
+          <h3>First launch</h3>
+          <p>In Finder, <b>right-click the app → Open</b> (see the note below). A step-by-step guided tour appears on first run.</p>
+        </div>
+        <div class="step">
+          <span class="n">3</span>
+          <h3>Grant what you want</h3>
+          <p>Basic collecting needs no permissions; Screen Recording shows real icon snapshots, Accessibility enables click-through.</p>
+        </div>
+      </div>
+      <div class="gatekeeper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19z"/><path d="M12 9v5M12 17h.01"/></svg>
+        <span>The app is currently ad-hoc signed (no Apple Developer ID yet), so Gatekeeper may question it on first launch: right-click and choose Open, or go to System Settings → Privacy &amp; Security and click Open Anyway. You can also clone the repo and build it yourself with <code>make app</code>. Download: <a href="https://github.com/anmutu/menu-harbor/releases/latest target="_blank" rel="noopener"" style="color:var(--coral-deep);">GitHub Releases</a></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
+        Permissions &amp; privacy
+      </div>
+      <h2>Minimum permissions, nothing leaves your Mac</h2>
+      <p>Core features need no authorization. Two optional permissions, both local-only.</p>
+    </div>
+    <div class="perm">
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="m16 10 5-2.5v9L16 14"/></svg></div>
+        <div>
+          <h3>Screen Recording · optional</h3>
+          <p>Captures the menu bar icons themselves so the harbor shows their real look. Images are processed briefly in memory — never written to disk, never uploaded.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><path d="M4 9h16M12 9v6l-3 6M12 15l3 6"/></svg></div>
+        <div>
+          <h3>Accessibility · optional</h3>
+          <p>Reads public icon names (otherwise macOS 26 shows only Item-0) and performs one semantic press on the original icon for you.</p>
+        </div>
+      </div>
+    </div>
+    <p class="privacy-line">No network · No accounts · No analytics — full details in <a href="https://github.com/anmutu/menu-harbor/blob/main/docs/privacy.md" target="_blank" rel="noopener">privacy.md</a></p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
+        FAQ
+      </div>
+      <h2>You might ask</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <h3>macOS 26 reclaims folded menu bar icons and breaks folding tools — what then?</h3>
+        <p>Starting with macOS 26 the system reclaims folded menu bar icons, which breaks the folding approach used by Bartender, Ice and Hidden Bar. MenuHarbor ships with a fold health check; when it detects this behavior it automatically switches to <b>collect mode</b>: the menu bar keeps its native layout while the harbor continues to show, search, and click every icon.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Is there a free, open-source alternative to Bartender and Ice?</h3>
+        <p>MenuHarbor is open source (MIT), free, and subscription-free: notch-safe mode, forgiving search, click-through, and three-zone management in one package. Grab the universal build from GitHub Releases — it runs on both Apple Silicon and Intel.</p>
+      </div>
+      <div class="faq-item">
+        <h3>The notch is hiding my menu bar icons — how do I get them back?</h3>
+        <p>On a notched Mac, MenuHarbor automatically enters notch-safe mode: hidden icons dock into the harbor Shelf below the notch, sorted first and flagged with a warning mark, searchable and directly clickable. A permanent "Harbor" button sits just below the notch, so the entry point can never be pushed away.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Does MenuHarbor upload any data?</h3>
+        <p>No. No network connections, no accounts, no analytics; snapshots are processed briefly in memory and preferences stay on your Mac. Screen Recording and Accessibility are both optional — declining either doesn't affect basic collecting.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 anmutu</span>
+    <span><a href="https://github.com/anmutu/menu-harbor/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></span>
+    <span class="spacer"></span>
+    <span><a href="https://github.com/anmutu/menu-harbor target="_blank" rel="noopener"">GitHub</a></span>
+    <span><a href="https://github.com/anmutu/menu-harbor/releases target="_blank" rel="noopener"">Releases</a></span>
+    <span class="note">This page is a single HTML file with no third-party assets; its source lives in the repository and it is published via GitHub Pages.</span>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -4,6 +4,8 @@ MenuHarbor 是一个原生 macOS 菜单栏溢出层：**刘海挡住的菜单栏
 
 > 🌐 官网：<https://anmutu.github.io/menu-harbor/> · 下载：<https://github.com/anmutu/menu-harbor/releases>
 
+> **English** · MenuHarbor is a free, open-source macOS menu bar manager: icons hidden behind the notch dock into a harbor right below it — visible, searchable, and clickable, while the native menu bar stays untouched. Works with the macOS 26 collect mode that breaks classic folding tools. [Website (English)](https://anmutu.github.io/menu-harbor/en/) · [Download](https://github.com/anmutu/menu-harbor/releases/latest)
+
 ## 现在能做什么
 
 - **刘海安全模式（带刘海的屏幕自动启用）**：不需要逐个按住 ⌘ 拖图标，港湾会扫描当前屏幕的菜单栏图标，在刘海下方展示并支持搜索。
