@@ -125,7 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 410),
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 500),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -134,6 +134,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.contentViewController = NSHostingController(rootView: OnboardingView(model: model, finish: { [weak self] in self?.closeOnboarding() }))
+        // 演示/视觉自测深链：TOUR_DARK=1 时引导窗口强制深色外观。
+        if ProcessInfo.processInfo.environment["TOUR_DARK"] == "1" {
+            window.appearance = NSAppearance(named: .darkAqua)
+        }
         window.center()
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
